@@ -7,7 +7,7 @@ It's gonna take a while to fully document this thing
 
 Example:
 ```
-//There is a lot of out of context code in here, it's ripped from the multithreaded applet in Brains@Play, for context. 
+//There is a lot of out of context code here, it's ripped from the multithreaded applet in Brains@Play, for context. 
 // We'll add a standalone example here soon with proper context/demonstration for all of this.
 
         //add the worker manager if it's not on window
@@ -107,5 +107,25 @@ Example:
                 this.pushedUpdateToThreads = true;
             }
         };
+
+        //Message Channels
+        // //direct communication channel between particle and render threads
+        // window.workers.establishMessageChannel(
+        //     'particleStep',
+        //     this.worker1Id,
+        //     this.canvasWorkerId,
+        //     function worker2Response(self,args,origin,port,eventName){
+        //         //args = [float32array] from particle1Step output
+        //         self.boids = args.output;
+        //         if(port) 
+        //         requestAnimationFrame( //let the particle thread know that the render thread is ready for more data (throttled by framerate)
+        //             ()=>{
+        //                 port.postMessage({foo:'particleStep',input:[performance.now()*0.001],origin:origin});
+        //             }
+        //         ); 
+        //     },
+        //     'particleStep',
+        //     this.origin
+        // );
 
 ```
