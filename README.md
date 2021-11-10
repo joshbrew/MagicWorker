@@ -129,3 +129,7 @@ Example:
         // );
 
 ```
+
+Joshua Brewster and Garrett Flynn
+
+License AGPL v3.0
