@@ -1,7 +1,7 @@
 import { gpuUtils } from 'gpujsutils';
 import { Math2 } from './Math2';
 import { Events } from './Event.js';
-import { ProxyManager } from './ProxyElement.js';
+import { ProxyManager } from './ProxyListener.js';
 
 let dynamicImport = async (url) => {
   let module = await import(url);
