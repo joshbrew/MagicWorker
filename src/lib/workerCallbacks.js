@@ -137,6 +137,43 @@ export class CallbackManager {
           } else return false;
         }
       },
+      { //append array values
+        case: 'appendValues', callback: (self, args, origin) => {
+          if (typeof args === 'object') {
+            Object.keys(args).forEach((key) => {
+              if(!self[key]) self[key] = args[key];
+              else if (Array.isArray(args[key])) self[key].push(args[key]); //variables will be accessible in functions as this.x or this['x']
+              else self[key] = args[key];
+            });
+            return true;
+          } else return false;
+        }
+      },
+      { //for use with transfers
+        case: 'setValuesFromArrayBuffers', callback: (self, args, origin) => {
+          if (typeof args === 'object') {
+            Object.keys(args).forEach((key) => { 
+              if(args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key] = Array.from(args[key]);
+              else self[key] = args[key];
+            });
+            return true;
+          } else return false;
+        }
+      },
+      { //for use with transfers
+        case: 'appendValuesFromArrayBuffers', callback: (self, args, origin) => {
+          if (typeof args === 'object') {
+            Object.keys(args).forEach((key) => {
+              if(!self[key] && args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key] = Array.from(args[key]);
+              else if(!self[key]) self[key] = args[key];
+              else if(args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key].push(Array.from(args[key]));
+              else if(Array.isArray(args[key])) self[key].push(args[key]); //variables will be accessible in functions as this.x or this['x']
+              else self[key] = args[key];
+            });
+            return true;
+          } else return false;
+        }
+      },
       { //parses a stringified class prototype (class x{}.toString()) containing function methods for use on the worker
         case: 'transferClassObject', callback: (self, args, origin) => {
           if (typeof args === 'object') {
