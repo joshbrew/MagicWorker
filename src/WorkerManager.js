@@ -103,12 +103,12 @@ export class WorkerManager {
     }
 
     //add a callback to a worker
-    addWorkerFunction(functionName,fstring,origin,id) {
+    addWorkerFunction(functionName,fstring,origin,id,callback=(result)=>{}) {
       if(functionName && fstring) {
         if(typeof fstring === 'function') fstring = fstring.toString();
         let dict = {foo:'addfunc',args:[functionName,fstring],origin:origin}; //post to the specific worker
-        if(!id) this.workers.forEach((w) => {this.post(dict,w.id);}); //post to all of the workers
-        else this.post(dict,id);
+        if(!id) this.workers.forEach((w) => {this.post(dict,w.id,callback);}); //post to all of the workers
+        else this.post(dict,id,callback);
       }
     }
 
