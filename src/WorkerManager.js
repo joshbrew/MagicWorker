@@ -62,9 +62,9 @@ export class WorkerManager {
               var msg = ev.data;
 
               // Resolve 
-              let toResolve = this.toResolve[ev.data.callbackId]
+              let toResolve = this.toResolve[ev.data.callbackId];
               if (toResolve) {
-                toResolve(msg.output)
+                toResolve(msg.output);x
                 delete this.toResolve[ev.data.callbackId]
               }
 
@@ -113,7 +113,7 @@ export class WorkerManager {
     }
 
     //run from the list of callbacks on an available worker
-    async run(functionName,args,origin,id,transfer) {
+    async run(functionName,args,origin,id,transfer,callback=(result)=>{}) {
         if(functionName) {
           if(functionName === 'transferClassObject') {
             if(typeof args === 'object' && !Array.isArray(args)) {
@@ -123,7 +123,7 @@ export class WorkerManager {
             }
           }
           let dict = {foo:functionName, args:args, origin:origin};
-          return await this.post(dict,id,transfer);
+          return await this.post(dict,id,transfer,callback);
         }
     }
 
@@ -183,7 +183,7 @@ export class WorkerManager {
 
     }
 
-    post = (input, id, transfer) => {
+    post = (input, id, transfer, callback=(result)=>{}) => {
 
       return new Promise(resolve => {
         //console.log('posting',input,id);
@@ -193,8 +193,16 @@ export class WorkerManager {
           else return v;
         })} 
 
+        const resolver = (res) => 
+          {    
+              if (callback) {
+                  callback(res);
+              }
+              resolve(res);
+          }
+
         input.callbackId = Math.floor(1000000 * Math.random())
-        this.toResolve[input.callbackId] = resolve
+        this.toResolve[input.callbackId] = resolver;
 
         if(id == null) {
             const worker = this.workers?.[this.threadrot]?.worker
@@ -236,6 +244,8 @@ export class WorkerManager {
             return true;
         } else return false;
     }
+
+    close = this.terminate
 
     initElementProxy = initElementProxy
 }

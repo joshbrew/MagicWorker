@@ -508,10 +508,33 @@ export class CallbackManager {
     ];
   }
 
-  async runCallback(foo,input=[],origin) {
+  
+  addCallback(functionName,callback=(self,args,origin)=>{}) {
+    if(!functionName || !callback) return false;
+    this.removeCallback(functionName); //removes existing callback if it is there
+    this.callbacks.push({case:functionName,callback:callback});
+    return true;
+  }
+
+  removeCallback(functionName) {
+      let foundidx;
+      let found = this.callbacks.find((o,i) => {
+          if(o.case === functionName) {
+              foundidx = i;
+              return true;
+          }
+      });
+      if(found) {
+          this.callbacks.splice(i,1);
+          return true;
+      }
+      else return false;
+  }
+
+  async runCallback(functionName,input=[],origin) {
     let output = 'function not defined';
     await Promise.all(this.callbacks.map(async (o,i) => {
-      if (o.case === foo) {
+      if (o.case === functionName) {
         if (input) output = await o.callback(this, input, origin);
         return true;
       } else return false;
@@ -519,13 +542,13 @@ export class CallbackManager {
     return output;
   }
 
-  checkEvents(foo, origin) {
+  checkEvents(functionName, origin) {
     let found = this.EVENTSETTINGS.find((o) => {
-      if ((o.origin && origin && o.case && foo)) {
-        if (o.origin === origin && o.case === foo) return true;
+      if ((o.origin && origin && o.case && functionName)) {
+        if (o.origin === origin && o.case === functionName) return true;
         else return false;
-      } else if (o.case && foo) {
-        if (o.case === foo) return true;
+      } else if (o.case && functionName) {
+        if (o.case === functionName) return true;
         else return false;
       } else if (o.origin && origin) {
         if(o.origin === origin) return true;
@@ -533,7 +556,7 @@ export class CallbackManager {
       }
       else return false;
     });
-    //console.log(foo,origin,found)
+    //console.log(functionName,origin,found)
     return found;
   }
 
