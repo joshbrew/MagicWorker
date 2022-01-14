@@ -14,17 +14,17 @@
 import {StateManager} from 'anotherstatemanager'
 
 export class Events {
-    constructor(workermanager=undefined) {
+    constructor(manager) {
 
         this.state = new StateManager({},undefined,false); //trigger only state (no overhead)
-        this.workermanager = workermanager;
+        this.manager = manager;
 
-        if(workermanager !== undefined) { //only in window
-            let found = workermanager.workerResponses.find((foo) => {
+        if(manager !== undefined) { //only in window
+            let found = manager.responses.find((foo) => {
                 if(foo.name === 'eventmanager') return true;
             });
             if(!found) {
-                workermanager.addCallback('eventmanager',this.workerCallback);
+                manager.addCallback('eventmanager',this.workerCallback);
             }
         } 
 
@@ -40,7 +40,7 @@ export class Events {
     }
 
     //add an event name, can optionally add them to any threads too from the main thread
-    addEvent(eventName,origin=undefined,foo=undefined,workerId=undefined) {
+    addEvent(eventName,origin,foo,workerId) {
         this.state.setState({[eventName]:undefined});
         if(this.workermanager !== undefined) {
             if(origin !== undefined || foo !== undefined) {

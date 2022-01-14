@@ -2,12 +2,15 @@
   "name": "magicworker",
   "version": "1.0.5",
   "description": "A bundle of web worker management utilities for single script pipeline creation. Includes events, messagechannels, automatic typedarray transfer (especially for passing large datasets between workers), and canvas with input proxies, and even demo threejs integration. This takes a lot of brain hurt out of the threading procedure on the web.",
-  "main": "src/index.js",
-  "directories": {
-    "example": "example"
-  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "cd docs && yarn && yarn run start",
+    "typecheck": "tsc --watch --preserveWatchOutput --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config browser.config.js --mode production"
   },
   "repository": {
     "type": "git",
@@ -24,12 +27,22 @@
   "author": "Joshua Brewster",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "anotherstatemanager":"^1.0.0",
-    "gpujsutils":"^1.0.0",
-    "three":"^0.134.0"
+    "anotherstatemanager": "^1.0.0",
+    "gpujsutils": "^1.0.0",
+    "three": "^0.134.0"
   },
   "bugs": {
     "url": "https://github.com/brainsatplay/MagicWorker/issues"
   },
-  "homepage": "https://github.com/brainsatplay/MagicWorker#readme"
+  "homepage": "https://github.com/brainsatplay/MagicWorker#readme",
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "babel-loader": "^8.2.3",
+    "ts-loader": "^9.2.6",
+    "tslib": "^2.3.1",
+    "typescript": "^4.5.4",
+    "webpack": "^5.66.0",
+    "webpack-cli": "^4.9.1",
+    "worker-loader": "^3.0.8"
+  }
 }

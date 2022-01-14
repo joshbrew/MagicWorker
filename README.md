@@ -4,6 +4,8 @@
 
 It's gonna take a while to fully document this thing
 
+> Note: The frontend must be built after Webpacking the library because *Webpack allows for modules to be imported in the worker scope without breaking*
+
 
 Example:
 ```

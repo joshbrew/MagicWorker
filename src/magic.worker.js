@@ -1,17 +1,11 @@
 
-import {CallbackManager} from './lib/workerCallbacks'
+import {CallbackManager} from './lib/workerCallbacks.js'
 
 let manager = new CallbackManager();
 let id = `worker_${Math.floor(Math.random()*10000000000)}`;
-let canvas = manager.canvas; 
-let ctx = manager.canvas.context;
-let context = ctx; //another common reference
 let counter = 0;
 
 self.onmessage = async (event) => {
-  // define gpu instance
-  // console.log("worker executing...", event)
-  // console.time("worker");
   let input;
   if(event.data.output) input = event.data.output; //from events
   else input = event.data;
@@ -19,21 +13,16 @@ self.onmessage = async (event) => {
 
   let dict;
   let output = undefined;
-  let emitted = false;
   if(event.data.eventName) { //pipe events to the event manager system
-    //console.log(event.data)
     manager.EVENTS.workerCallback(event.data);
   }
   else if(typeof input === 'object'){
     if(input.canvas !== undefined) { //if a new canvas is sent (event.data.canvas = htmlCanvasElement.transferControlToOffscreen()).
       manager.canvas = input.canvas; 
-      canvas = manager.canvas;
     }
     if(input.context !== undefined ) { //set the context
       manager.ctx = manager.canvas.getContext(input.context);
       manager.context = manager.ctx;
-      ctx = manager.ctx;
-      context = manager.ctx;
     } 
 
     let eventSetting = manager.checkEvents(input.foo,input.origin);
@@ -58,10 +47,10 @@ self.onmessage = async (event) => {
     }
     //if(input.foo === 'particleStep') console.log(eventSetting);
 
-    dict = {output: output, foo: input.foo, origin: input.origin, counter:counter};
-    if(eventSetting) {manager.EVENTS.emit(eventSetting.eventName,dict,undefined,transfer,eventSetting.port); emitted = true;} //if the origin and foo match an event setting on the thread, this emits output as an event
+    dict = {output: output, foo: input.foo, origin: input.origin, callbackId: input.callbackId, counter:counter};
+    if(eventSetting) {manager.EVENTS.emit(eventSetting.eventName,dict,undefined,transfer,eventSetting.port);} //if the origin and foo match an event setting on the thread, this emits output as an event
     else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-        self.postMessage(dict,undefined,transfer);
+        self.postMessage(dict,transfer); // TODO: Correct proper transfer syntax
     } 
   }
   /*
@@ -77,10 +66,6 @@ self.onmessage = async (event) => {
   // console.timeEnd("worker");
   return dict;
 }
-
-if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-    //addEventListener('message', self.onmessage);
-} 
 
 manager.EVENTS.emit('newWorker',id);
 

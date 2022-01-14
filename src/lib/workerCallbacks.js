@@ -65,6 +65,9 @@ function parseFunctionFromText(method) {
 
 
 export class CallbackManager {
+  ctx;
+  context; 
+
   constructor() {
 
     try {
@@ -80,7 +83,6 @@ export class CallbackManager {
 
 
     this.canvas = new OffscreenCanvas(512, 512); //can add fnctions and refer to this.offscreen 
-    this.ctx; this.context;
     this.ANIMATION = undefined;
     this.ANIMATIONFUNC = undefined;
     this.ANIMATING = false;

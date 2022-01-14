@@ -8,16 +8,15 @@ function noop() {
 }
 
 export class ElementProxy {
-  constructor(element, origin, workerId, eventHandlers) {
+  constructor(element, origin, workerId, eventHandlers, manager) {
     this.id = 'proxy'+Math.floor(Math.random()*10000);
     this.eventHandlers = eventHandlers;
     this.origin = origin;
     this.workerId = workerId;
-
-    if(!window.workers) window.workers = new WorkerManager();
+    this.manager = (manager instanceof WorkerManager) ? manager : new WorkerManager();
 
     const sendEvent = (data) => {
-        window.workers.runWorkerFunction(
+        this.manager.runWorkerFunction(
             'proxyHandler',
             {type:'event',id:this.id,data:data},
             this.origin,
@@ -26,7 +25,7 @@ export class ElementProxy {
     };
 
     // register an id
-    window.workers.runWorkerFunction(
+    this.manager.runWorkerFunction(
         'proxyHandler',
         {type:'makeProxy',id:this.id},
         this.origin,
@@ -133,7 +132,7 @@ const mouseEventHandler = makeSendPropertiesHandler([
   }
 
   //do this on main thread
-  export const initElementProxy = (element, workerId, origin) => {
+  export function initElementProxy(element, workerId, origin) {
 
     const eventHandlers = {
         contextmenu: preventDefaultHandler,
@@ -151,7 +150,7 @@ const mouseEventHandler = makeSendPropertiesHandler([
     };
     
     const proxy = new ElementProxy(
-      element, origin, workerId, eventHandlers
+      element, origin, workerId, eventHandlers, this
     );
 
     return proxy;

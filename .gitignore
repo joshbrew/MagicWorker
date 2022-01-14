@@ -1,0 +1,13 @@
+.vscode
+.DS_Store
+node_modules
+*.key
+
+lib
+lib-esm
+_bundles
+
+docs/docs/reference
+
+# Library Builds
+**/dist
