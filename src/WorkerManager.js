@@ -64,7 +64,7 @@ export class WorkerManager {
               // Resolve 
               let toResolve = this.toResolve[ev.data.callbackId];
               if (toResolve) {
-                toResolve(msg.output);x
+                toResolve(msg.output);
                 delete this.toResolve[ev.data.callbackId]
               }
 
