@@ -7,18 +7,18 @@ import { Events } from './lib/Event';
 import { initElementProxy } from './lib/ProxyElement';
 
 export class WorkerManager {
-    url?: string|URL;
-    responses: (Function | {callback: Function, name: string})[] = [];
-    workers: ({worker:Worker | DummyWorker, id:string})[] = [];
-    threads: number = 0;
-    threadrot: number = 0;
-    events: Events;
-    subEvent: Function;
-    unsubEvent: Function;
-    addEvent: Function;
-    toResolve: {[x:string]:Function};
+    url;
+    responses = [];
+    workers = [];
+    threads = 0;
+    threadrot = 0;
+    events;
+    subEvent;
+    unsubEvent;
+    addEvent;
+    toResolve = {}
 
-    constructor(url?:string, nThreads:number=0){
+    constructor(url, nThreads=0){
         this.url = url;
         this.responses = [];
         this.workers = [];
@@ -26,23 +26,22 @@ export class WorkerManager {
         this.threadrot = 0;
 
         this.events = new Events(this);
-        this.subEvent = (eventName:string, result=(_:any)=>{})=>{this.events.subEvent(eventName,result);}
-        this.unsubEvent = (eventName:string, sub:string) => {this.events.unsubEvent(eventName,sub)};
-        this.addEvent = (eventName:string, origin?:string, foo?:string, id?:string) => {this.events.addEvent(eventName, origin, foo, id)};
+        this.subEvent = (eventName, result=(_)=>{})=>{this.events.subEvent(eventName,result);}
+        this.unsubEvent = (eventName, sub) => {this.events.unsubEvent(eventName,sub)};
+        this.addEvent = (eventName, origin, foo, id) => {this.events.addEvent(eventName, origin, foo, id)};
 
         for(var i = 0; i < nThreads; i++){
           this.addWorker()
         }
 
-        this.toResolve = {}
     }
 
-    addWorker = (url:string|URL|undefined=this.url, type:WorkerType = 'module') => {
+    addWorker = (url=this.url, type = 'module') => {
 
 
         let newWorker;
         try {
-          if (url == null) newWorker = (worker as any)()
+          if (url == null) newWorker = worker()
           else {
             if (!(url instanceof URL)) url = new URL(url, import.meta.url)
             newWorker = new Worker(url, {name:'worker_'+this.workers.length, type})
@@ -58,15 +57,7 @@ export class WorkerManager {
             
           this.workers.push({worker:newWorker, id:id});
 
-          newWorker.onmessage = (ev: {
-            data: {
-              callbackId: string,
-              output: any,
-              foo:string,
-              origin?: string,
-              counter: number
-            }
-          }) => {
+          newWorker.onmessage = (ev) => {
 
               var msg = ev.data;
 
@@ -112,7 +103,7 @@ export class WorkerManager {
     }
 
     //add a callback to a worker
-    addWorkerFunction(functionName:string,fstring:Function | string,origin:string,id:string) {
+    addWorkerFunction(functionName,fstring,origin,id) {
       if(functionName && fstring) {
         if(typeof fstring === 'function') fstring = fstring.toString();
         let dict = {foo:'addfunc',args:[functionName,fstring],origin:origin}; //post to the specific worker
@@ -122,7 +113,7 @@ export class WorkerManager {
     }
 
     //run from the list of callbacks on an available worker
-    async run(functionName:string,args:any=[],origin?:string,id?:string,transfer?:any) {
+    async run(functionName,args,origin,id,transfer) {
         if(functionName) {
           if(functionName === 'transferClassObject') {
             if(typeof args === 'object' && !Array.isArray(args)) {
@@ -139,18 +130,18 @@ export class WorkerManager {
     runWorkerFunction = this.run
 
     //a way to set variables on a thread
-    setValues(values={},origin:string,id:string,transfer?:any) {
+    setValues(values={},origin,id,transfer) {
       this.run('setValues',values,origin,id,transfer);
     }
 
     //this creates a message port so particular event outputs can directly message another worker and save overhead on the main thread
     establishMessageChannel(
-      eventName:string,
-      worker1Id:string,
-      worker2Id:string,
-      worker2Response:Function, //onEvent=(self,args,origin)=>{} //args will be the output
-      foo:string,
-      origin:string) {
+      eventName,
+      worker1Id,
+      worker2Id,
+      worker2Response, //onEvent=(self,args,origin)=>{} //args will be the output
+      foo,
+      origin) {
       let channel = new MessageChannel();
       let port1 = channel.port1;
       let port2 = channel.port2;
@@ -192,12 +183,12 @@ export class WorkerManager {
 
     }
 
-    post = (input:any, id?:string, transfer?:any) => {
+    post = (input, id, transfer) => {
 
       return new Promise(resolve => {
         //console.log('posting',input,id);
         if (Array.isArray(input.input)){
-        input.input = input.input.map((v:any) => {
+        input.input = input.input.map((v) => {
           if (typeof v === 'function') return v.toString();
           else return v;
         })} 
@@ -231,7 +222,7 @@ export class WorkerManager {
 
     postToWorker = this.post
 
-    terminate(id:string) {
+    terminate(id) {
         let idx;
         let found = this.workers.find((o,i)=>{
             if(o.id === id) {
@@ -256,17 +247,17 @@ export class WorkerManager {
 
 class DummyWorker {
 
-  responses: any[];
-  manager: CallbackManager;
+  responses
+  manager
 
-    constructor(responses: any[]) {
+    constructor(responses) {
         this.responses = responses;
 
         this.manager = new CallbackManager()
 
     }
 
-    postMessage=(input:any)=>{
+    postMessage=(input)=>{
         let result = this.onmessage({data:input}); 
         this.responses.forEach((foo,_) => {
             foo(result);
@@ -277,13 +268,7 @@ class DummyWorker {
 
     onerror = () => {}
 
-    onmessage = (event: {
-      data: {
-        foo: string
-        input: any,
-        origin:string
-      }
-    }) => {
+    onmessage = (event) => {
       // define gpu instance
       //console.log("worker executing...")
       console.time("worker");

@@ -1,7 +1,7 @@
 var path = require("path");
 
 var PATHS = {
-  entryPoint: path.resolve(__dirname, './src/package.ts'),
+  entryPoint: path.resolve(__dirname, './src/package.js'),
   bundles: path.resolve(__dirname, 'dist'),
 }
 
