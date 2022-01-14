@@ -19,20 +19,20 @@ export class WorkerManager {
     toResolve = {}
 
     constructor(url, nThreads=0){
-        this.url = url;
-        this.responses = [];
-        this.workers = [];
-        this.threads = nThreads;
-        this.threadrot = 0;
+      this.url = url;
+      this.responses = [];
+      this.workers = [];
+      this.threads = nThreads;
+      this.threadrot = 0;
 
-        this.events = new Events(this);
-        this.subEvent = (eventName, result=(_)=>{})=>{this.events.subEvent(eventName,result);}
-        this.unsubEvent = (eventName, sub) => {this.events.unsubEvent(eventName,sub)};
-        this.addEvent = (eventName, origin, foo, id) => {this.events.addEvent(eventName, origin, foo, id)};
+      this.events = new Events(this);
+      this.subEvent = (eventName, result=(_)=>{})=>{this.events.subEvent(eventName,result);}
+      this.unsubEvent = (eventName, sub) => {this.events.unsubEvent(eventName,sub)};
+      this.addEvent = (eventName, origin, foo, id) => {this.events.addEvent(eventName, origin, foo, id)};
 
-        for(var i = 0; i < nThreads; i++){
-          this.addWorker()
-        }
+      for(var i = 0; i < nThreads; i++){
+        this.addWorker()
+      }
 
     }
 
@@ -87,7 +87,7 @@ export class WorkerManager {
 
     addCallback(name='',callback=()=>{}) {
       if(name.length > 0 && !this.responses.find((o)=>{if(typeof o === 'object') {if(o.name === name) return true;} return})) {
-        this.responses.push({name:'',callback:callback});
+        this.responses.push({name:name,callback:callback});
       }
     }
 
