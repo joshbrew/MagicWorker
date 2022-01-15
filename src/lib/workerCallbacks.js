@@ -535,11 +535,11 @@ export class CallbackManager {
     let output = undefined;
     await Promise.all(this.callbacks.map(async (o,i) => {
       if (o.case === functionName) {
-        if (input) output = await o.callback(this, input, origin);
+        output = await o.callback(this, input, origin);
         return true;
       } else if (o.aliases) {
         if(o.aliases.indexOf(functionName) > -1) {
-            if (input) output = await o.callback(this, input, origin, user);
+            output = await o.callback(this, input, origin, user);
             return true;
         }
       } 

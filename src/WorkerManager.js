@@ -128,7 +128,9 @@ export class WorkerManager {
         }
     }
 
+    //aliases
     runWorkerFunction = this.run
+    runFunction = this.run;
 
     //a way to set variables on a thread
     setValues(values={},origin,id,transfer) {
