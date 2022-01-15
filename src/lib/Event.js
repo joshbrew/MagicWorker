@@ -77,7 +77,7 @@
          this.state.setState({[eventName]:input}); //local event 
      }
  
-     workerCallback = (msg) => {
+     callback = (msg) => {
          if(typeof msg === 'object') {
              if(msg.eventName !== undefined && msg.output !== undefined) {
                  this.state.setState({[msg.eventName]:msg.output});

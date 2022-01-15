@@ -13,8 +13,8 @@ self.onmessage = async (event) => {
 
   let dict;
   let output = undefined;
-  if(event.data.eventName) { //pipe events to the event manager system
-    manager.EVENTS.workerCallback(event.data);
+  if(event.data?.eventName) { //pipe events to the event manager system
+    manager.EVENTS.callback(event.data);
   }
   else if(typeof input === 'object'){
     if(input.canvas !== undefined) { //if a new canvas is sent (event.data.canvas = htmlCanvasElement.transferControlToOffscreen()).
