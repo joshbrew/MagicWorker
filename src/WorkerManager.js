@@ -25,10 +25,10 @@ export class WorkerManager {
       this.threads = nThreads;
       this.threadrot = 0;
 
-      this.events = new Events(this);
-      this.subEvent = (eventName, result=(_)=>{})=>{this.events.subEvent(eventName,result);}
-      this.unsubEvent = (eventName, sub) => {this.events.unsubEvent(eventName,sub)};
-      this.addEvent = (eventName, origin, foo, id) => {this.events.addEvent(eventName, origin, foo, id)};
+      this.EVENTS = new Events(this);
+      this.subEvent = (eventName, result=(_)=>{})=>{this.EVENTS.subEvent(eventName,result);}
+      this.unsubEvent = (eventName, sub) => {this.EVENTS.unsubEvent(eventName,sub)};
+      this.addEvent = (eventName, origin, foo, id) => {this.EVENTS.addEvent(eventName, origin, foo, id)};
 
       for(var i = 0; i < nThreads; i++){
         this.addWorker()
@@ -102,7 +102,7 @@ export class WorkerManager {
     }
 
     //add a callback to a worker
-    addWorkerFunction(functionName,fstring,origin,id,callback=(result)=>{}) {
+    addFunction(functionName,fstring,origin,id,callback=(result)=>{}) {
       if(functionName && fstring) {
         if(typeof fstring === 'function') fstring = fstring.toString();
         let dict = {foo:'addfunc',args:[functionName,fstring],origin:origin}; //post to the specific worker
@@ -110,6 +110,8 @@ export class WorkerManager {
         else this.post(dict,id,callback);
       }
     }
+
+    addWorkerFunction = this.addFunction
 
     //run from the list of callbacks on an available worker
     async run(functionName,args,origin,id,transfer,callback=(result)=>{}) {
