@@ -38,7 +38,6 @@ export class WorkerManager {
 
     addWorker = (url=this.url, type = 'module') => {
 
-
         let newWorker;
         try {
           if (url == null) newWorker = worker()

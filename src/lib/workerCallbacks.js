@@ -532,12 +532,18 @@ export class CallbackManager {
   }
 
   async runCallback(functionName,input=[],origin) {
-    let output = 'function not defined';
+    let output = undefined;
     await Promise.all(this.callbacks.map(async (o,i) => {
       if (o.case === functionName) {
         if (input) output = await o.callback(this, input, origin);
         return true;
-      } else return false;
+      } else if (o.aliases) {
+        if(o.aliases.indexOf(functionName) > -1) {
+            if (input) output = await o.callback(this, input, origin, user);
+            return true;
+        }
+      } 
+      return false;
     }));
     return output;
   }
