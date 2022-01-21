@@ -13,6 +13,6 @@
 
 <script type="module">
     console.log(magic)
-    magic.run('ping').then(console.log).catch(console.error)
+    magic.run('list').then(result => document.body.innerHTML = result).catch(console.error)
 </script>
 </html>

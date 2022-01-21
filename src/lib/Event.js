@@ -20,7 +20,7 @@
          this.manager = manager;
  
          if(manager !== undefined) { //only in window
-             let found = manager.reponses.find((foo) => {
+             let found = manager.responses.find((foo) => {
                  if(foo.name === 'eventmanager') return true;
              });
              if(!found) {

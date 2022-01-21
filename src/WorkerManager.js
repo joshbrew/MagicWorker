@@ -204,13 +204,13 @@ export class WorkerManager {
               resolve(res);
           }
 
-        input.callbackId = Math.floor(1000000 * Math.random())
+        input.callbackId = Math.floor(1000000 * Math.random());
         this.toResolve[input.callbackId] = resolver;
 
         if(id == null) {
             const worker = this.workers?.[this.threadrot]?.worker
-            this.workers[this.threadrot].worker.postMessage(input,transfer);
             if (worker){
+              worker.postMessage(input,transfer);
               if(this.threads > 1){
                   this.threadrot++;
                   if(this.threadrot >= this.threads){
@@ -224,8 +224,8 @@ export class WorkerManager {
                 if(o.id === id) {
                     o.worker.postMessage(input,transfer); 
                     return true;
-                  } else return
-            })
+                  } else return;
+            });
         }
 
       })

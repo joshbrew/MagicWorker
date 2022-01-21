@@ -567,12 +567,14 @@ export class CallbackManager {
   }
 
   async checkCallbacks(event) {
+    console.log(event);
     let output = 'function not defined';
     if(!event.data) return output;
     await Promise.all(this.callbacks.map(async (o,i) => {
       if (o.case === event.data.foo || o.case === event.data.case) {
         if (event.data.input) output = await o.callback(this, event.data.input, event.data.origin);
         else if (event.data.args) output = await o.callback(this, event.data.args, event.data.origin);
+        else output = await o.callback(this, undefined, event.data.origin); //no inputs
         return true;
       } else return false;
     }));
