@@ -8,11 +8,16 @@
     <title>Document</title>
 </head>
 <body>
-    
+    List of default functions from worker:<br>
 </body>
 
 <script type="module">
-    console.log(magic)
-    magic.run('list').then(result => document.body.innerHTML = result).catch(console.error)
+    console.log(magic);
+    
+    magic.run('ping');
+
+    magic.run('list')
+    .then(result => {result.forEach((r) => {document.body.innerHTML+=`${r}<br>`})})
+    .catch(console.error);
 </script>
 </html>
