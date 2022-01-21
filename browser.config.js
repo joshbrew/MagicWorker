@@ -7,8 +7,8 @@ var PATHS = {
 
 var config = {
   entry: {
-    'index': [PATHS.entryPoint],
-    'index.min': [PATHS.entryPoint]
+    'magicworker': [PATHS.entryPoint],
+    'magicworker.min': [PATHS.entryPoint]
   },
   output: {
     path: PATHS.bundles,

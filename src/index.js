@@ -7,4 +7,5 @@
 export * from './magic.worker'
 export * from './lib/ProxyElement'
 export * from './WorkerManager'
+export * from './ThreadedCanvas'
 

@@ -4,7 +4,12 @@
 
 It's gonna take a while to fully document this thing
 
-> Note: The frontend must be built after Webpacking the library because *Webpack allows for modules to be imported in the worker scope without breaking*
+> Note: The frontend must be built after Webpacking the library because *Webpack allows for modules to be imported in the worker scope without breaking* To webpack. Download this repo and extract it, run `npm install`. After editing the library, from the main folder use `npm run build` to create the webpacked file which can be used in a browser without build tools.
+
+
+
+
+
 
 
 Example:

@@ -31,9 +31,15 @@ export class WorkerManager {
       this.addEvent = (eventName, origin, foo, id) => {this.EVENTS.addEvent(eventName, origin, foo, id)};
 
       for(var i = 0; i < nThreads; i++){
-        this.addWorker()
+        this.addWorker(); 
       }
 
+    }
+
+    //return the worker by id, or the first worker (e.g. the default one)
+    getWorker(id) {
+      if(id) return this.workers.find((o) => {if(o.id === id) return true}).worker;
+      else return this.workers[0].worker;
     }
 
     addWorker = (url=this.url, type = 'module') => {
@@ -84,12 +90,14 @@ export class WorkerManager {
       }
     }
 
-    addCallback(name='',callback=()=>{}) {
+    //automated responses
+    addCallback(name='',callback=(result)=>{}) {
       if(name.length > 0 && !this.responses.find((o)=>{if(typeof o === 'object') {if(o.name === name) return true;} return})) {
         this.responses.push({name:name,callback:callback});
       }
     }
 
+    //remove automated response by name
     removeCallback(nameOrIdx='') {
       if(nameOrIdx.length > 0) {
         let idx;
@@ -102,19 +110,20 @@ export class WorkerManager {
     }
 
     //add a callback to a worker
-    addFunction(functionName,fstring,origin,id,callback=(result)=>{}) {
+    addFunction(functionName,fstring,workerId,origin,callback=(result)=>{}) {
       if(functionName && fstring) {
         if(typeof fstring === 'function') fstring = fstring.toString();
         let dict = {foo:'addfunc',args:[functionName,fstring],origin:origin}; //post to the specific worker
-        if(!id) this.workers.forEach((w) => {this.post(dict,w.id,callback);}); //post to all of the workers
-        else this.post(dict,id,callback);
+        if(!workerId) this.workers.forEach((w) => {this.post(dict,w.id,callback);}); //post to all of the workers
+        else this.post(dict,workerId,callback);
       }
     }
 
+    //alias
     addWorkerFunction = this.addFunction
 
     //run from the list of callbacks on an available worker
-    async run(functionName,args,origin,id,transfer,callback=(result)=>{}) {
+    async run(functionName,args,workerId,origin,transfer,callback=(result)=>{}) {
         if(functionName) {
           if(functionName === 'transferClassObject') {
             if(typeof args === 'object' && !Array.isArray(args)) {
@@ -124,13 +133,13 @@ export class WorkerManager {
             }
           }
           let dict = {foo:functionName, args:args, origin:origin};
-          return await this.post(dict,id,transfer,callback);
+          return await this.post(dict,workerId,transfer,callback);
         }
     }
 
     //aliases
     runWorkerFunction = this.run
-    runFunction = this.run;
+    runFunction = this.run
 
     //a way to set variables on a thread
     setValues(values={},origin,id,transfer) {
@@ -186,7 +195,7 @@ export class WorkerManager {
 
     }
 
-    post = (input, id, transfer, callback=(result)=>{}) => {
+    post = (input, workerId, transfer, callback=(result)=>{}) => {
 
       return new Promise(resolve => {
         //console.log('posting',input,id);
@@ -207,7 +216,7 @@ export class WorkerManager {
         input.callbackId = Math.floor(1000000 * Math.random());
         this.toResolve[input.callbackId] = resolver;
 
-        if(id == null) {
+        if(workerId == null) {
             const worker = this.workers?.[this.threadrot]?.worker
             if (worker){
               worker.postMessage(input,transfer);
@@ -221,7 +230,7 @@ export class WorkerManager {
         }
         else{
             this.workers.find((o)=>{
-                if(o.id === id) {
+                if(o.id === workerId) {
                     o.worker.postMessage(input,transfer); 
                     return true;
                   } else return;
@@ -233,10 +242,10 @@ export class WorkerManager {
 
     postToWorker = this.post
 
-    terminate(id) {
+    terminate(workerId) {
         let idx;
         let found = this.workers.find((o,i)=>{
-            if(o.id === id) {
+            if(o.id === workerId) {
                 idx=i;
                 o.worker.terminate();
                 return true;

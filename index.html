@@ -4,25 +4,84 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="dist/index.js"></script>
+    <script src="dist/magicworker.js"></script>
     <title>Document</title>
 </head>
 <body>
+    <canvas id='c' style='height:400; width:400;'></canvas>
     List of default functions from worker:<br>
 </body>
 
 <script type="module">
     console.log(magic);
+    //Should be one thread by default
+    magic.run('ping').then(console.log).catch(console.error);
+
     
-    magic.run('ping');
+    let threadId = magic.getWorker();
+    let origin = 0;
+
+    console.log(ThreadedCanvas);
+
+    magic.addWorkerFunction( 
+            'add',
+            function add(self,args,origin){return args[0]+args[1];}.toString(),
+            threadId//, //can add functions to a specific thread, or all of them if blank
+            //origin //optionally identifies source of the call (e.g. between threads or programs)
+    );
+
+    magic.addEvent(
+        'threadresult',
+        threadId,
+        'add'
+    );
+
+    magic.subEvent('threadresult',(res)=>{
+        console.log(res);
+    });
+
+    magic.run('add',[0,1]);
+
 
     magic.run('list')
     .then(result => {result.forEach((r) => {document.body.innerHTML+=`${r}<br>`})})
     .catch(console.error);
 
+    let draw = (self, args, origin) => {
+        let cWidth = self.canvas.width;
+        let cHeight = self.canvas.height;
+           // style the background
+        let gradient = self.ctx.createRadialGradient(cWidth*0.5,cHeight*0.5,2,cWidth*0.5,cHeight*0.5,100*self.angle*self.angle);
+        gradient.addColorStop(0,"purple");
+        gradient.addColorStop(0.25,"dodgerblue");
+        gradient.addColorStop(0.32,"skyblue");
+        gradient.addColorStop(1,self.bgColor ?? 'black');
+        self.ctx.fillStyle = gradient;
+        self.ctx.fillRect(0,0,cWidth,cHeight);
+        
+        // draw the circle
+        self.ctx.beginPath();
+
+        self.angle += self.angleChange;
+
+        let radius = cHeight*0.04 + (cHeight*0.46) * Math.abs(Math.cos(self.angle));
+        self.ctx.arc(cWidth*0.5, cHeight*0.5, radius, 0, Math.PI * 2, false);
+        self.ctx.closePath();
+        
+        // color in the circle
+        self.ctx.fillStyle = self.cColor;
+        self.ctx.fill();
+        //console.log(this.ctx, this.cColor, this.bgColor)
+        
+    }
+
+    //magic.run('setAnimation',draw.toString(),threadId);
+
+
+
     let arr = new Array(100).fill(1);
 
-    console.time('coherence (kernel writing to gpu)')
+    console.time('coherence (kernel writing to gpu)');
     magic.run('coherence',[[arr,arr],1,1,50]).then(
         (res) => {
             
