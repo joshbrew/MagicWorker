@@ -19,5 +19,22 @@
     magic.run('list')
     .then(result => {result.forEach((r) => {document.body.innerHTML+=`${r}<br>`})})
     .catch(console.error);
+
+    let arr = new Array(100).fill(1);
+
+    console.time('coherence (kernel writing to gpu)')
+    magic.run('coherence',[[arr,arr],1,1,50]).then(
+        (res) => {
+            
+            console.timeEnd('coherence (kernel writing to gpu)')    
+            console.time('coherence (kernel saved on gpu this time)')
+            magic.run('coherence',[[arr,arr],1,1,50]).then(
+            (res2) => {
+                console.timeEnd('coherence (kernel saved on gpu this time)');
+                console.log('coherence',res);
+            }).catch(console.error);
+        }).catch(console.error);
+
+
 </script>
 </html>
