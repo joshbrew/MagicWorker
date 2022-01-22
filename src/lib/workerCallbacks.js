@@ -222,9 +222,8 @@ export class CallbackManager {
             let port = args[2];
             port.onmessage = onmessage; //attach the port onmessage event
             this[args[0]+'port'] = port;
-            return true;
           }
-          return false;
+          return true;
         }
       },
       { //internal event subscription, look at Event.js for usage, its essentially a function trigger manager for creating algorithms
@@ -568,7 +567,7 @@ export class CallbackManager {
   }
 
   async checkCallbacks(event) {
-    console.log(event);
+    //console.log(event);
     let output = 'function not defined';
     if(!event.data) return output;
     await Promise.all(this.callbacks.map(async (o,i) => {

@@ -28,7 +28,7 @@ export class WorkerManager {
       this.EVENTS = new Events(this);
       this.subEvent = (eventName, result=(_)=>{})=>{this.EVENTS.subEvent(eventName,result);}
       this.unsubEvent = (eventName, sub) => {this.EVENTS.unsubEvent(eventName,sub)};
-      this.addEvent = (eventName, origin, foo, id) => {this.EVENTS.addEvent(eventName, origin, foo, id)};
+      this.addEvent = async (eventName, origin, foo, id) => {return await this.EVENTS.addEvent(eventName, origin, foo, id)};
 
       for(var i = 0; i < nThreads; i++){
         this.addWorker(); 
@@ -110,12 +110,15 @@ export class WorkerManager {
     }
 
     //add a callback to a worker
-    addFunction(functionName,fstring,workerId,origin,callback=(result)=>{}) {
+    async addFunction(functionName,fstring,workerId,origin,callback=(result)=>{}) {
       if(functionName && fstring) {
         if(typeof fstring === 'function') fstring = fstring.toString();
         let dict = {foo:'addfunc',args:[functionName,fstring],origin:origin}; //post to the specific worker
-        if(!workerId) this.workers.forEach((w) => {this.post(dict,w.id,callback);}); //post to all of the workers
-        else this.post(dict,workerId,callback);
+        if(!workerId) {
+          this.workers.forEach((w) => {this.post(dict,w.id,callback);});
+          return true;
+        } //post to all of the workers
+        else return await this.post(dict,workerId,callback);
       }
     }
 

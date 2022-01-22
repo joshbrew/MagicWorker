@@ -8,7 +8,7 @@
     <title>Document</title>
 </head>
 <body>
-    <canvas id='c' style='height:400; width:400;'></canvas>
+    <canvas id='c' style='height:400; width:400;'></canvas><br>
     List of default functions from worker:<br>
 </body>
 
@@ -18,29 +18,31 @@
     magic.run('ping').then(console.log).catch(console.error);
 
     
-    let threadId = magic.getWorker();
+    let threadId = magic.workers[0].id;
     let origin = 0;
 
-    console.log(ThreadedCanvas);
+    //console.log(ThreadedCanvas);
 
-    magic.addWorkerFunction( 
+    magic.addFunction( 
             'add',
-            function add(self,args,origin){return args[0]+args[1];}.toString(),
+            function add(self,args,origin){return args[0]+args[1];},
             threadId//, //can add functions to a specific thread, or all of them if blank
             //origin //optionally identifies source of the call (e.g. between threads or programs)
-    );
+    ).then(console.log).catch(console.error);
 
     magic.addEvent(
         'threadresult',
         threadId,
         'add'
-    );
+    ).then(console.log);
 
     magic.subEvent('threadresult',(res)=>{
         console.log(res);
     });
 
-    magic.run('add',[0,1]);
+    console.log(magic.EVENTS)
+
+    magic.run('add',[0,1],threadId).then(console.log).catch(console.error);
 
 
     magic.run('list')

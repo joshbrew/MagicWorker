@@ -40,16 +40,17 @@
      }
  
      //add an event name, can optionally add them to any threads too from the main thread
-     addEvent(eventName,workerId=undefined,functionName=undefined,origin=undefined) {
+     async addEvent(eventName,workerId=undefined,functionName=undefined,origin=undefined) {
          this.state.setState({[eventName]:undefined});
          if(this.manager !== undefined) {
              if(origin !== undefined || functionName !== undefined) {
                  if(workerId !== undefined) {
-                     this.manager.post({origin:origin,foo:'addevent',input:[eventName,functionName]},workerId);
+                    return await this.manager.post({origin:origin,foo:'addevent',input:[eventName,functionName]},workerId);
                  } else {
-                     this.manager.workers.forEach((w)=>{
-                         this.manager.post({origin:origin,foo:'addevent',input:[eventName,functionName]},w.id); //add it to all of them since we're assuming we're rotating threads
-                     });
+                    this.manager.workers.forEach((w)=>{
+                        this.manager.post({origin:origin,foo:'addevent',input:[eventName,functionName]},w.id); //add it to all of them since we're assuming we're rotating threads
+                    });
+                    return true;
                  }
              }
          }
