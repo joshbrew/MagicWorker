@@ -75,7 +75,21 @@
         
     }
 
-    //magic.run('setAnimation',draw.toString(),threadId);
+    /*
+        //quick setup canvas worker with initial settings
+
+        let canvas = document.getElementById('c');
+
+        let canvasWorker = new ThreadedCanvas(                                              //name given for the canvas worker operations
+            canvas,                                              //canvas element to transfer to offscreencanvas
+            '2d',                                               //canvas context setting       
+            draw,                                    //pass the custom draw function
+            {angle:0,angleChange:0.000,bgColor:'black',cColor:'red'}, //'this' values, canvas and context/ctx are also available under 'self' for now, these can be mutated like uniforms with the 'setValues' command
+            threadId                                       //worker id to use, if undefined it sets up its own worker
+        );   
+
+
+    */
 
 
 

@@ -2,9 +2,9 @@ import { WorkerManager } from "../WorkerManager"
 
 //The animation should probably be an arrow function
 export class ThreadedCanvas {
-    constructor(name= `canvas_${Math.round(Math.random()*100000)}`,canvas, context=undefined, animation=undefined, setValues=undefined, workerId=undefined, transfer=undefined) { 
+    constructor(canvas, context=undefined, drawFunction=undefined, setValues=undefined, workerId=undefined, transfer=undefined, origin= `canvas_${Math.round(Math.random()*100000)}`) { 
         if(!canvas) throw new Error('Input a canvas element or Id')
-        this.name = name;
+        this.origin = origin;
         this.workerId = workerId;
         
         if(typeof canvas === 'string') canvas = document.getElementById(canvas);
@@ -14,7 +14,7 @@ export class ThreadedCanvas {
 
         if(!this.workerId) {
             this.initWorker();
-            if(typeof setValues === 'object') window.workers.postToWorker({foo:'setValues',args:setValues,origin:this.name},this.workerId,transfer);
+            if(typeof setValues === 'object') window.workers.postToWorker({foo:'setValues',args:setValues,origin:this.origin},this.workerId,transfer);
         }
         if(canvas) {
             this.setCanvas(canvas);
@@ -23,25 +23,25 @@ export class ThreadedCanvas {
             this.setContext(context);
         }
         if(animation) {
-            this.setAnimation(animation);
+            this.setAnimation(drawFunction);
         }
         
     }
 
     setContext(context=this.context){
         this.context = context;
-        window.workers.postToWorker({context:context, origin:this.name},this.workerId);
+        window.workers.postToWorker({context:context, origin:this.origin},this.workerId);
     }
 
     setCanvas(canvas=this.canvas) {
         this.canvas = canvas;
         this.offscreen = canvas.transferControlToOffscreen();
-        window.workers.postToWorker({canvas: this.offscreen, origin:this.name, foo:null},this.workerId,[this.offscreen]);
+        window.workers.postToWorker({canvas: this.offscreen, origin:this.origin, foo:null},this.workerId,[this.offscreen]);
     }
 
     // {x:3, y:['a','b','c']} etc
     setValues(valObject=undefined,transfer=undefined) {
-        if(typeof setValues === 'object') window.workers.postToWorker({foo:'setValues',input:valObject,origin:this.name},this.workerId,transfer);
+        if(typeof setValues === 'object') window.workers.postToWorker({foo:'setValues',input:valObject,origin:this.origin},this.workerId,transfer);
     }
 
     //you can reference canvas/this.canvas and context/this.context in the function 
@@ -51,43 +51,43 @@ export class ThreadedCanvas {
         if(typeof animationFunction === 'function') fstring = animationFunction.toString();
         else if(typeof animationFunction !== 'string') return false;
         //console.log(fstring)
-        window.workers.postToWorker({origin:this.name,foo:'setAnimation',input:[fstring]},this.workerId)
+        window.workers.postToWorker({origin:this.origin,foo:'setAnimation',input:[fstring]},this.workerId)
     }
 
     addSetup(setupFunction) {
         if(typeof animationFunction !== 'function') return false;
         let fstring = setupFunction.toString();
-        window.workers.postToWorker({origin:this.name,foo:'addFunc',input:['setupAnim',fstring]},this.workerId)
+        window.workers.postToWorker({origin:this.origin,foo:'addFunc',input:['setupAnim',fstring]},this.workerId)
     }
 
     setThreeAnimation(setupFunction, drawFunction) {
-        window.workers.postToWorker({origin:this.name,foo:'initThree',input:[setupFunction.toString(),drawFunction.toString()]})
+        window.workers.postToWorker({origin:this.origin,foo:'initThree',input:[setupFunction.toString(),drawFunction.toString()]})
     }
 
     startThreeAnimation() {
-        window.workers.postToWorker({origin:this.name,foo:'startThree',input:[]},this.workerId);
+        window.workers.postToWorker({origin:this.origin,foo:'startThree',input:[]},this.workerId);
     }
 
     clearThreeAnimation() {
-        window.workers.postToWorker({origin:this.name,foo:'clearThree',input:[]},this.workerId);
+        window.workers.postToWorker({origin:this.origin,foo:'clearThree',input:[]},this.workerId);
     }
 
     setValues(values={},transfer=[]) {
         if(typeof values === 'object') {
-            window.workers.postToWorker({origin:this.name,foo:'setValues',input:values},this.workerId,transfer);
+            window.workers.postToWorker({origin:this.origin,foo:'setValues',input:values},this.workerId,transfer);
         }
     }
 
     startAnimation() {
-        window.workers.postToWorker({origin:this.name,foo:'startAnimation',input:[]},this.workerId);
+        window.workers.postToWorker({origin:this.origin,foo:'startAnimation',input:[]},this.workerId);
     }
 
     stopAnimation() {
-        window.workers.postToWorker({origin:this.name,foo:'stopAnimation',input:[]},this.workerId);
+        window.workers.postToWorker({origin:this.origin,foo:'stopAnimation',input:[]},this.workerId);
     }
 
     setCanvasSize(w=this.canvas.width,h=this.canvas.height) {
-        window.workers.postToWorker({origin:this.name,foo:'resizecanvas',input:[w,h]},this.workerId);
+        window.workers.postToWorker({origin:this.origin,foo:'resizecanvas',input:[w,h]},this.workerId);
     }
 
     initWorker() {
@@ -115,7 +115,7 @@ export class ThreadedCanvas {
     }
 
     workeronmessage = (msg) => {
-        if(msg.origin === this.name) { 
+        if(msg.origin === this.origin) { 
             console.log("Result: ", msg);
         }
     }

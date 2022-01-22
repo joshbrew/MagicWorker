@@ -19,8 +19,8 @@ export class ElementProxy {
         this.manager.runWorkerFunction(
             'proxyHandler',
             {type:'event',id:this.id,data:data},
-            this.origin,
-            this.workerId
+            this.workerId,
+            this.origin
         );
     };
 
@@ -28,8 +28,8 @@ export class ElementProxy {
     this.manager.runWorkerFunction(
         'proxyHandler',
         {type:'makeProxy',id:this.id},
-        this.origin,
-        this.workerId
+        this.workerId,
+        this.origin
     );
 
 

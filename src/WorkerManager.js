@@ -18,7 +18,7 @@ export class WorkerManager {
     addEvent;
     toResolve = {}
 
-    constructor(url, nThreads=0){
+    constructor(url, nThreads=1){
       this.url = url;
       this.responses = [];
       this.workers = [];
@@ -30,8 +30,11 @@ export class WorkerManager {
       this.unsubEvent = (eventName, sub) => {this.EVENTS.unsubEvent(eventName,sub)};
       this.addEvent = async (eventName, origin, foo, id) => {return await this.EVENTS.addEvent(eventName, origin, foo, id)};
 
-      for(var i = 0; i < nThreads; i++){
+      let i = 0;
+
+      while(i < nThreads){
         this.addWorker(); 
+        i++;
       }
 
     }
@@ -145,8 +148,14 @@ export class WorkerManager {
     runFunction = this.run
 
     //a way to set variables on a thread
-    setValues(values={},origin,id,transfer) {
-      this.run('setValues',values,origin,id,transfer);
+    async setValues(values={},id,origin,transfer) {
+      if(id)
+        return await this.run('setValues',values,id,origin,transfer);
+      else {
+        this.workers.forEach((w) => {
+          this.run('setValues',values,w.id,origin,transfer);
+        })
+      }
     }
 
     //this creates a message port so particular event outputs can directly message another worker and save overhead on the main thread
@@ -155,8 +164,9 @@ export class WorkerManager {
       worker1Id,
       worker2Id,
       worker2Response, //onEvent=(self,args,origin)=>{} //args will be the output
-      foo,
-      origin) {
+      functionName, 
+      origin) 
+    {
       let channel = new MessageChannel();
       let port1 = channel.port1;
       let port2 = channel.port2;
@@ -165,11 +175,11 @@ export class WorkerManager {
         'addevent',
         [
           eventName,
-          foo,
+          functionName,
           port1
         ],
-        origin,
         worker1Id,
+        origin,
         [port1]
       );
 
@@ -180,8 +190,8 @@ export class WorkerManager {
           eventName,
           port2
         ],
-        origin,
         worker2Id,
+        origin,
         [port2]
       );
 
@@ -192,8 +202,8 @@ export class WorkerManager {
             eventName,
             worker2Response.toString()
           ],
-          origin,
-          worker2Id
+          worker2Id,
+          origin
         );
 
     }
@@ -246,6 +256,10 @@ export class WorkerManager {
     postToWorker = this.post
 
     terminate(workerId) {
+      if(!workerId) {
+        this.workers.forEach((o) => o.worker.terminate()); //terminate all
+      }
+      else {
         let idx;
         let found = this.workers.find((o,i)=>{
             if(o.id === workerId) {
@@ -258,6 +272,7 @@ export class WorkerManager {
             this.workers.splice(idx,1);
             return true;
         } else return false;
+      }
     }
 
     close = this.terminate
