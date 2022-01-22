@@ -37,10 +37,10 @@
     ).then(console.log);
 
     magic.subEvent('threadresult',(res)=>{
-        console.log(res);
+        console.log("add result", res);
     });
 
-    magic.run('add',[0,1],threadId).then(console.log).catch(console.error);
+    magic.run('add',[0,1],threadId)//.then(console.log).catch(console.error);
 
 
     magic.run('list')
