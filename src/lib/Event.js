@@ -20,12 +20,12 @@
          this.manager = manager;
  
          if(manager !== undefined) { //only in window
-             let found = manager.responses.find((foo) => {
-                 if(foo.name === 'eventmanager') return true;
-             });
-             if(!found) {
-                 manager.addCallback('eventmanager',this.workerCallback);
-             }
+            let found = manager.responses.find((foo) => {
+                if(foo.name === 'eventmanager') return true;
+            });
+            if(!found) {
+                manager.addCallback('eventmanager',this.callback);
+            }
          } 
  
      }
@@ -62,31 +62,32 @@
      }
  
      //use this to set values by event name, will post messages on threads too
-     emit(eventName, input, workerId=undefined,transfer=undefined,port=undefined) {
-         let output = {eventName:eventName, output:input};
-         
-         if(!input || !eventName) return;
-         if (this.manager !== undefined) { //when emitting values for workers, input should be an object like {input:0, foo'abc', origin:'here'} for correct worker callback usage
-             if(workerId !== undefined) this.manager.post(output,workerId,transfer);
-             else {this.manager.workers.forEach((w)=>{this.manager.post(output,w.id,transfer);});}
-         } else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-         // run this in global scope of window or worker. since window.self = window, we're ok
-             //if(port) console.log(port,output);
-             if(port) port.postMessage(output,undefined,transfer);
-             else postMessage(output,undefined,transfer); //thread event 
-         }
-         this.state.setState({[eventName]:input}); //local event 
+     emit = (eventName, input, workerId=undefined,transfer=undefined,port=undefined) => {
+        let output = {eventName:eventName, output:input};
+        
+        if(!input || !eventName) return;
+        if (this.manager !== undefined) { //when emitting values for workers, input should be an object like {input:0, foo'abc', origin:'here'} for correct worker callback usage
+            if(workerId !== undefined) this.manager.post(output,workerId,transfer);
+            else {this.manager.workers.forEach((w)=>{this.manager.post(output,w.id,transfer);});}
+        } else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+            // run this in global scope of window or worker. since window.self = window, we're ok
+            //if(port) console.log(port,output);
+            if(port) port.postMessage(output,undefined,transfer);
+            else self.postMessage(output,undefined,transfer); //thread event 
+        }
+        this.state.setState({[eventName]:input}); //local event 
      }
  
-     callback = (msg) => {
-         if(typeof msg === 'object') {
-             if(msg.eventName !== undefined && msg.output !== undefined) {
-                 this.state.setState({[msg.eventName]:msg.output});
-             }
-         }
-     }
- 
-     export = () => {
-         return this;
-     }
+    callback = (msg) => {
+        if(typeof msg === 'object') {
+            if(msg.eventName !== undefined && msg.output !== undefined) {
+                this.state.setState({[msg.eventName]:msg.output});
+            }
+        }
+    }
+
+    export = () => {
+        return this;
+    }
+
  }

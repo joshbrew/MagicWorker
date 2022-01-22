@@ -446,7 +446,7 @@ export class CallbackManager {
         case: 'coherence', callback: (self, args, origin) => {
           const correlograms = Math2.correlograms(args[0]);
           const buffer = [...args[0], ...correlograms];
-          console.log(buffer)
+          //console.log(buffer)
           var dfts;
 
           var scalar = 1;
