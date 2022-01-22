@@ -2,14 +2,15 @@
 
 `npm i magicworker`
 
-It's gonna take a while to fully document this thing
 
-> Note: The frontend must be built after Webpacking the library because *Webpack allows for modules to be imported in the worker scope without breaking* To webpack. Download this repo and extract it, run `npm install`. After editing the library, from the main folder use `npm run build` to create the webpacked file `magicworker.js` which can be used in a browser without build tools.
+> Note: The frontend must be built after Webpacking the library because *Webpack allows for modules to be imported in the worker scope without breaking* 
+
+> To webpack. Download this repo and extract it, run `npm install`. After editing the library, from the main folder use `npm run build` to create the webpacked file `magicworker.js` which can be used in a browser without build tools.
 
 
 ### Major Features
 
-- Use Web Workers i.e. threads conveniently to create single-file multithreaded applications. No need to understand the rest!
+- Use Web Workers i.e. threads conveniently to create sophisticated single-file multithreaded applications. No need to understand the rest!
 - Includes several utilities for on-the-fly transferring functions, data, typed arrays, and class objects to execute on the thread.
 - Do bulk math operations, use gpujs to create gpu threads with intuitive code-writing. Includes FFT examples.
 - Includes worker-based canvas and threejs rendering utilities (use node for easier threejs inclusion) for multithreaded rendering and basic proxy controls.
