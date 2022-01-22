@@ -114,7 +114,7 @@ This class lets you mirror element inputs to a proxy, mainly for canvas/threejs 
 ### Basic usage in an html file, with the webpacked library:
 ```html
 
-<script src='./magicworker.js' type='module'> 
+<script src='./dist/magicworker.js' type='module'> 
 
 //ping the worker to that it's working. These are async functions and can be awaited or can use .then() promises to keep threads synchronized
 magic.run('ping').then(console.log).catch(console.error);
