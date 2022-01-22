@@ -83,7 +83,7 @@ manager.establishMessageChannel(
     worker1Id,
     worker2Id,
     worker2Response=(self,args,origin)=>{}, //response on the second thread
-    functionName, //This tags the function on the first thread that triggers the message channel to send to this worker
+    functionName, //This tags the function on the first thread that triggers the message channel to send its result to the 2nd worker instead of back to the main trhead
     origin //add an origin tag for more specificity of when to trigger the channel
 )
 
