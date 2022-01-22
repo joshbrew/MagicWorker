@@ -18,9 +18,13 @@
 
 ### WorkerManager
 
-On the frontend, you just need to `import {WorkerManager} from 'magicworker`
-and create a `const manager = new WorkerManager()`
-or include the webpacked `magicworker.js` in your html file, which sets up the WorkerManager reference as `magic`
+On the frontend, you just need to 
+```js
+import {WorkerManager} from 'magicworker'
+
+const manager = new WorkerManager();
+```
+or include the webpacked `magicworker.js` in your html file, which instantiates the WorkerManager as `magic` with a default thread running.
 
 From there you can run the default functions, add your own by following the template, and easily build whole threading pipelines.
 
