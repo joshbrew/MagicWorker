@@ -101,7 +101,7 @@ export class CallbackManager {
     //origin = optional tag on input object
     //self = this. scope for variables within the callbackmanager (including values set)
 
-    this.callbacks = [
+    let defaultFunctions = [
       { //ping pong, just validates responsiveness
         case: 'ping', callback: (self, args, origin) => {
           return 'pong';
@@ -110,22 +110,24 @@ export class CallbackManager {
       { //return a list of function calls available on the worker
         case: 'list', callback: (self, args, origin) => {
           let list = [];
-          this.callbacks.forEach((obj) => {
-            list.push(obj.case);
+          this.callbacks.forEach((callback,name) => {
+            list.push(name);
           });
           return list;
         }
       },
       { //add a local function, can implement whole algorithm pipelines on-the-fly
         case: 'addfunc', callback: (self, args, origin) => { //arg0 = name, arg1 = function string (arrow or normal)
+          if(!args[0] || !args[1]) return false;
           let newFunc = parseFunctionFromText(args[1]);
 
-          let newCallback = { case: args[0], callback: newFunc };
-
-          let found = self.callbacks.findIndex(c => { if (c.case === newCallback.case) return c });
-          if (found != -1) self.callbacks[found] = newCallback;
-          else self.callbacks.push(newCallback);
+          self.callbacks.set(args[0], newFunc);          
           return true;
+        }
+      },
+      { case:'removefunc', callback:(self,args,origin) => {
+          if(args[0]) return this.removeCallback(args[0]);
+          else return undefined;
         }
       },
       { //set locally accessible values, just make sure not to overwrite the defaults in the callbackManager
@@ -506,45 +508,39 @@ export class CallbackManager {
         }
       }
     ];
+
+
+    this.callbacks = new Map();
+    defaultFunctions.forEach((o) => {
+      if(o.case) this.callbacks.set(o.case,o.callback);
+      if(o.aliases) o.aliases.forEach((alias) => this.callbacks.set(alias,o.callback));
+    });
+
   }
 
   
   addCallback(functionName,callback=(self,args,origin)=>{}) {
     if(!functionName || !callback) return false;
-    this.removeCallback(functionName); //removes existing callback if it is there
-    this.callbacks.push({case:functionName,callback:callback});
+    //this.removeCallback(functionName); //removes existing callback if it is there
+    this.callbacks.set(functionName,callback);
     return true;
   }
 
   removeCallback(functionName) {
-      let foundidx;
-      let found = this.callbacks.find((o,i) => {
-          if(o.case === functionName) {
-              foundidx = i;
-              return true;
-          }
-      });
+      let found = this.callbacks.get(functionName);
       if(found) {
-          this.callbacks.splice(i,1);
-          return true;
+        this.callbacks.delete(functionName);
+        return true;
       }
-      else return false;
+      return false;
   }
 
-  async runCallback(functionName,input=[],origin) {
+  async runCallback(functionName,args=[],origin) {
     let output = undefined;
-    await Promise.all(this.callbacks.map(async (o,i) => {
-      if (o.case === functionName) {
-        output = await o.callback(this, input, origin);
-        return true;
-      } else if (o.aliases) {
-        if(o.aliases.indexOf(functionName) > -1) {
-            output = await o.callback(this, input, origin, user);
-            return true;
-        }
-      } 
-      return false;
-    }));
+    let callback = this.callbacks.get(functionName);
+    if(callback) {
+      output = await callback(this, args, origin);
+    }
     return output;
   }
 
@@ -568,16 +564,21 @@ export class CallbackManager {
 
   async checkCallbacks(event) {
     //console.log(event);
-    let output = 'function not defined';
+    let output = undefined;
     if(!event.data) return output;
-    await Promise.all(this.callbacks.map(async (o,i) => {
-      if (o.case === event.data.foo || o.case === event.data.case) {
-        if (event.data.input) output = await o.callback(this, event.data.input, event.data.origin);
-        else if (event.data.args) output = await o.callback(this, event.data.args, event.data.origin);
-        else output = await o.callback(this, undefined, event.data.origin); //no inputs
-        return true;
-      } else return false;
-    }));
+    let callback;
+
+    //different function name properties just for different sensibilities
+    if(event.data.case) callback=this.callbacks.get(event.data.case);
+    else if (event.data.foo) callback=this.callbacks.get(event.data.foo);
+    else if (event.data.command) callback=this.callbacks.get(event.data.command);
+    else if (event.data.cmd) callback=this.callbacks.get(event.data.cmd);
+
+    if(callback) {
+      if (event.data.input) output = await callback(this, event.data.input, event.data.origin);
+      else if (event.data.args) output = await callback(this, event.data.args, event.data.origin);
+      else output = await callback(this, undefined, event.data.origin); //no inputs
+    }
     return output;
   }
 }
