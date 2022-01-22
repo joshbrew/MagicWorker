@@ -91,6 +91,19 @@ manager.establishMessageChannel(
 
 #### WorkerManager Utilities
 
+#### Events
+Allows subscribing to function outputs or outputs from specific origin points (or both) to automate the pipeline
+
+```js
+
+manager.addEvent('threadprocess',worker1Id,'add');
+
+let sub = manager.subEvent('threadprocess',(result)=>{console.log(result);});
+
+manager.unsubEvent('threadprocess',sub); //or leave sub blank to unsubsribe all
+
+```
+
 ##### ThreadedCanvas
 This class has macros for creating a canvas on a worker, which handles the rendering loop itself. See below for basic and advanced usage
 
