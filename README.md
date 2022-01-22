@@ -206,6 +206,8 @@ canvasWorker.setValues({angleChange:0.001}); //set the rate of change for the ci
 ```
 
 ### Advanced ThreeJS usage with several threads doing their own calculations 
+- [Example (takes a few seconds to load ThreeJS)](https://app.brainsatplay.com#Multithreaded)
+
 ```js
 
 import {WorkerManager, ThreadedCanvas, ProxyElement} from 'magicworker'
