@@ -357,7 +357,7 @@ export class CallbackManager {
             }, 300);
           } else {
             self.ANIMATING = true;
-            console.log('begin animation')
+            console.log('begin animation');
             self.ANIMATION = requestAnimationFrame(anim);
           }
           return true;

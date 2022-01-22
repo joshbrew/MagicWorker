@@ -7,7 +7,7 @@ import { WorkerManager } from "../WorkerManager";
 function noop() {
 }
 
-export class ElementProxy {
+export class ProxyElement {
   constructor(element, origin, workerId, eventHandlers, manager) {
     this.id = 'proxy'+Math.floor(Math.random()*10000);
     this.eventHandlers = eventHandlers;
@@ -132,7 +132,7 @@ const mouseEventHandler = makeSendPropertiesHandler([
   }
 
   //do this on main thread
-  export function initElementProxy(element, workerId, origin) {
+  export function initProxyElement(element, workerId, origin) {
 
     const eventHandlers = {
         contextmenu: preventDefaultHandler,
@@ -149,7 +149,7 @@ const mouseEventHandler = makeSendPropertiesHandler([
         keydown: filteredKeydownEventHandler,
     };
     
-    const proxy = new ElementProxy(
+    const proxy = new ProxyElement(
       element, origin, workerId, eventHandlers, this
     );
 

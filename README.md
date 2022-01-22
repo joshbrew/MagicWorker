@@ -156,7 +156,7 @@ magic.subEvent('threadresult',(res)=>{
 
 import {WorkerManager, ThreadedCanvas} from 'magicworker'
 
-let workers = new WorkerManager(undefined,0);
+let manager = new WorkerManager(undefined,0);
 
 let canvasWorkerId = workers.addWorker();
 
@@ -189,13 +189,16 @@ let draw = (self, args, origin) => {
     
 }
 
-let canvasWorker = new ThreadedCanvas(       //name given for the canvas worker operations
+let canvasWorker = new ThreadedCanvas(       /
+    manager,
     canvas,                                  //canvas element to transfer to offscreencanvas
     '2d',                                    //canvas context setting       
     draw,                                    //pass the custom draw function
     {angle:0,angleChange:0.000,bgColor:'black',cColor:'red'}, //'self' values, canvas and context/ctx are also available under 'self' for now, these can be mutated like uniforms on the thread with the 'setValues' command
     canvasWorkerId                           //worker id to use, if undefined it sets up its own worker
 );
+
+canvasWorker.startAnimation();
 
 canvasWorker.setValues({angleChange:0.001}); //set the rate of change for the circle
 
@@ -207,7 +210,8 @@ canvasWorker.setValues({angleChange:0.001}); //set the rate of change for the ci
 import {WorkerManager, ThreadedCanvas, ProxyElement} from 'magicworker'
 import {DynamicParticles} from 'dynamicparticles' //another library for this example
 
-let workers = new WorkerManager();
+let manager = new WorkerManager();
+
 let worker1Id = workers.addWorker();
 let worker2Id = workers.addWorker();
 let canvasWorkerId = workers.addWorker();
@@ -216,14 +220,15 @@ let canvas = document.querySelector('canvas'); //canvas in the html page
 let origin = 0; //main thread Id
 
 let canvasWorker = new ThreadedCanvas(   
+    manager,
     canvas,        //canvas element to transfer to offscreencanvas
     undefined,   //canvas context setting       
     undefined,  //pass the custom draw function
     undefined,  //'this' values, canvas and context/ctx are also available under 'self' for now, these can be mutated like uniforms with the 'setValues' command
     canvasWorkerId,   //worker id to use, if undefined it sets up its own worker
-    origin
+    origin,     
+    undefined //transfer values
 );
-
 
 //create a proxy for the canvas on the worker thread to mirror key inputs 
 let proxy = initElementProxy(
@@ -535,7 +540,7 @@ particleSettings.forEach((s,i) => {
             })
             if(self.groupsSetup === self.nGroups) {
                 //console.log(self.boids);
-                self.runCallback(
+                self.runCallback( //init once we've received the initial boids data 
                     'initThree',
                     [
                         self.proxyId,

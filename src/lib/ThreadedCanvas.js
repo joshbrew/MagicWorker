@@ -2,27 +2,28 @@ import { WorkerManager } from "../WorkerManager"
 
 //The animation should probably be an arrow function
 export class ThreadedCanvas {
-    constructor(canvas, context=undefined, drawFunction=undefined, setValues=undefined, workerId=undefined, transfer=undefined, origin= `canvas_${Math.round(Math.random()*100000)}`) { 
+    constructor(manager, canvas, context=undefined, drawFunction=undefined, setValues=undefined, workerId=undefined, origin= `canvas_${Math.round(Math.random()*100000)}`, transfer=undefined) { 
         if(!canvas) throw new Error('Input a canvas element or Id')
         this.origin = origin;
         this.workerId = workerId;
+        this.manager = manager;
+        if(!manager) return false;
         
         if(typeof canvas === 'string') canvas = document.getElementById(canvas);
         this.canvas = canvas;
         this.context = context;
         this.offscreen;
 
-        if(!this.workerId) {
-            this.initWorker();
-            if(typeof setValues === 'object') window.workers.postToWorker({foo:'setValues',args:setValues,origin:this.origin},this.workerId,transfer);
-        }
+        if(!this.workerId) this.initWorker();
+        
+        if(typeof setValues === 'object') this.manager.postToWorker({foo:'setValues',args:setValues,origin:this.origin},this.workerId,transfer);
         if(canvas) {
             this.setCanvas(canvas);
         }
         if(context) { 
             this.setContext(context);
         }
-        if(animation) {
+        if(drawFunction) {
             this.setAnimation(drawFunction);
         }
         
@@ -30,18 +31,18 @@ export class ThreadedCanvas {
 
     setContext(context=this.context){
         this.context = context;
-        window.workers.postToWorker({context:context, origin:this.origin},this.workerId);
+        this.manager.postToWorker({context:context, origin:this.origin},this.workerId);
     }
 
     setCanvas(canvas=this.canvas) {
         this.canvas = canvas;
         this.offscreen = canvas.transferControlToOffscreen();
-        window.workers.postToWorker({canvas: this.offscreen, origin:this.origin, foo:null},this.workerId,[this.offscreen]);
+        this.manager.postToWorker({canvas: this.offscreen, origin:this.origin, foo:null},this.workerId,[this.offscreen]);
     }
 
     // {x:3, y:['a','b','c']} etc
     setValues(valObject=undefined,transfer=undefined) {
-        if(typeof setValues === 'object') window.workers.postToWorker({foo:'setValues',input:valObject,origin:this.origin},this.workerId,transfer);
+        if(typeof setValues === 'object') this.manager.postToWorker({foo:'setValues',input:valObject,origin:this.origin},this.workerId,transfer);
     }
 
     //you can reference canvas/this.canvas and context/this.context in the function 
@@ -51,67 +52,67 @@ export class ThreadedCanvas {
         if(typeof animationFunction === 'function') fstring = animationFunction.toString();
         else if(typeof animationFunction !== 'string') return false;
         //console.log(fstring)
-        window.workers.postToWorker({origin:this.origin,foo:'setAnimation',input:[fstring]},this.workerId)
+        this.manager.postToWorker({origin:this.origin,foo:'setAnimation',input:[fstring]},this.workerId)
     }
 
     addSetup(setupFunction) {
-        if(typeof animationFunction !== 'function') return false;
-        let fstring = setupFunction.toString();
-        window.workers.postToWorker({origin:this.origin,foo:'addFunc',input:['setupAnim',fstring]},this.workerId)
+        let fstring = setupFunction
+        if(typeof setupFunction === 'function') fstring = setupFunction.toString();
+        this.manager.postToWorker({origin:this.origin,foo:'addFunc',input:['setupAnim',fstring]},this.workerId)
     }
 
     setThreeAnimation(setupFunction, drawFunction) {
-        window.workers.postToWorker({origin:this.origin,foo:'initThree',input:[setupFunction.toString(),drawFunction.toString()]})
+        this.manager.postToWorker({origin:this.origin,foo:'initThree',input:[setupFunction.toString(),drawFunction.toString()]})
     }
 
     startThreeAnimation() {
-        window.workers.postToWorker({origin:this.origin,foo:'startThree',input:[]},this.workerId);
+        this.manager.postToWorker({origin:this.origin,foo:'startThree',input:[]},this.workerId);
     }
 
     clearThreeAnimation() {
-        window.workers.postToWorker({origin:this.origin,foo:'clearThree',input:[]},this.workerId);
+        this.manager.postToWorker({origin:this.origin,foo:'clearThree',input:[]},this.workerId);
     }
 
     setValues(values={},transfer=[]) {
         if(typeof values === 'object') {
-            window.workers.postToWorker({origin:this.origin,foo:'setValues',input:values},this.workerId,transfer);
+            this.manager.postToWorker({origin:this.origin,foo:'setValues',input:values},this.workerId,transfer);
         }
     }
 
     startAnimation() {
-        window.workers.postToWorker({origin:this.origin,foo:'startAnimation',input:[]},this.workerId);
+        this.manager.postToWorker({origin:this.origin,foo:'startAnimation',input:[]},this.workerId);
     }
 
     stopAnimation() {
-        window.workers.postToWorker({origin:this.origin,foo:'stopAnimation',input:[]},this.workerId);
+        this.manager.postToWorker({origin:this.origin,foo:'stopAnimation',input:[]},this.workerId);
     }
 
     setCanvasSize(w=this.canvas.width,h=this.canvas.height) {
-        window.workers.postToWorker({origin:this.origin,foo:'resizecanvas',input:[w,h]},this.workerId);
+        this.manager.postToWorker({origin:this.origin,foo:'resizecanvas',input:[w,h]},this.workerId);
     }
 
     initWorker() {
         if(!this.workerId) {
-            if (window.workers == null){
-                window.workers = new WorkerManager()
+            if (this.manager == null){
+                this.manager = new WorkerManager()
             }
 
-            this.workerId = window.workers.addWorker(); // add a worker for this DataAtlas analyzer instance
-            window.workers.workerResponses.push(this.workeronmessage);
+            this.workerId = this.manager.addWorker(); // add a worker for this DataAtlas analyzer instance
+            this.manager.workerResponses.push(this.workeronmessage);
         }
         this.setCanvas();
         this.setContext();
     }
 
-    init(animation) {
+    init(drawFunction) {
         if(!this.workerId) this.initWorker();
         this.setCanvas();
         this.setContext();
-        if(animation) this.setAnimation(animation);
+        if(drawFunction) this.setAnimation(drawFunction);
     }
 
     deinit() {
-        window.workers.terminate(this.workerId);
+        this.manager.terminate(this.workerId);
     }
 
     workeronmessage = (msg) => {

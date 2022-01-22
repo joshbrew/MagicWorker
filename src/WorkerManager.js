@@ -4,7 +4,8 @@ import {CallbackManager} from './lib/workerCallbacks'
 import worker from './magic.worker.js' // internal worker
 
 import { Events } from './lib/Event';
-import { initElementProxy } from './lib/ProxyElement';
+import { ProxyElement, initProxyElement } from './lib/ProxyElement';
+import { ThreadedCanvas } from './lib/ThreadedCanvas';
 
 export class WorkerManager {
     url;
@@ -16,7 +17,10 @@ export class WorkerManager {
     subEvent;
     unsubEvent;
     addEvent;
-    toResolve = {}
+    toResolve = {};
+    ProxyElement = ProxyElement;
+    initProxyElement = initProxyElement;
+    ThreadedCanvas = ThreadedCanvas; //class reference
 
     constructor(url, nThreads=1){
       this.url = url;
@@ -277,7 +281,6 @@ export class WorkerManager {
 
     close = this.terminate
 
-    initElementProxy = initElementProxy
 }
 
 

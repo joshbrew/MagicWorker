@@ -8,7 +8,7 @@
     <title>Document</title>
 </head>
 <body>
-    <canvas id='c' style='height:400; width:400;'></canvas><br>
+    <canvas id='c' height='300px' width='300px' style='height:300px; width:300px;'></canvas><br>
     List of default functions from worker:<br>
 </body>
 
@@ -75,21 +75,27 @@
         
     }
 
-    /*
-        //quick setup canvas worker with initial settings
+    
+    //quick setup canvas worker with initial settings
 
-        let canvas = document.getElementById('c');
+    let canvas = document.getElementById('c');
+  
 
-        let canvasWorker = new ThreadedCanvas(                                              //name given for the canvas worker operations
-            canvas,                                              //canvas element to transfer to offscreencanvas
-            '2d',                                               //canvas context setting       
-            draw,                                    //pass the custom draw function
-            {angle:0,angleChange:0.000,bgColor:'black',cColor:'red'}, //'this' values, canvas and context/ctx are also available under 'self' for now, these can be mutated like uniforms with the 'setValues' command
-            threadId                                       //worker id to use, if undefined it sets up its own worker
-        );   
+    let anim = new magic.ThreadedCanvas(                                              
+        magic,                      //needs to reference the workermanager
+        canvas,                //canvas element to transfer to offscreencanvas
+        '2d',                  //canvas context setting       
+        draw,                 //pass the custom draw function
+        {angle:0,angleChange:0.001,bgColor:'black',cColor:'red'}, //'this' values, canvas and context/ctx are also available under 'self' for now, these can be mutated like uniforms with the 'setValues' command
+        threadId,           //worker id to use, if undefined it sets up its own worker
+        origin                                       
+    );   
 
+    anim.setValues({angleChange:0.001});
 
-    */
+    anim.startAnimation();
+
+    
 
 
 
