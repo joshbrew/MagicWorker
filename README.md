@@ -8,7 +8,7 @@
 > To webpack. Download this repo and extract it, run `npm install`. After editing the library, from the main folder use `npm run build` to create the webpacked file `magicworker.js` which can be used in a browser without build tools.
 
 
-### Major Features
+## Major Features
 
 - Use Web Workers i.e. threads conveniently to create sophisticated single-file multithreaded applications. No need to understand the rest!
 - Includes several utilities for on-the-fly transferring functions, data, typed arrays, and class objects to execute on the thread.
@@ -16,7 +16,7 @@
 - Includes worker-based canvas and threejs rendering utilities (use node for easier threejs inclusion) for multithreaded rendering and basic proxy controls.
 - Create message channels between threads to keep all operations off of the main thread.
 
-### WorkerManager
+## WorkerManager
 
 On the frontend, you just need to 
 ```js
@@ -28,16 +28,16 @@ or include the webpacked `magicworker.js` in your html file, which instantiates 
 
 From there you can run the default functions, add your own by following the template, and easily build whole threading pipelines.
 
-#### WorkerManager Major Functions
+## WorkerManager Major Functions
 
-##### Adding a thread:
+#### Adding a thread:
 ```js
 
 let id = manager.addWorker(); //add a thread and return the id for passing callbacks to that thread
 
 ```
 
-##### Running a function on the thread:
+#### Running a function on the thread:
 ```js 
 
 manager.run('ping',undefined,id); //the id is optional if you want to rotate through available threads instead 
@@ -49,7 +49,7 @@ let result = await manager.run('ping');
 manager.run('ping').then(res => console.log(result)).catch(console.error);
 ```
 
-##### Adding a function to the thread
+#### Adding a function to the thread
 ```js
 
 manager.addFunction(
@@ -69,14 +69,14 @@ manager.setValues({x:1},id); //sets values on all workers if no id provided, the
 
 ```
 
-##### Terminate workers
+#### Terminate workers
 ```js
 
 manager.terminate(id); //leave id blank to terminate all workers
 
 ```
 
-##### Establish a message channel between two threads (avoids the main thread)
+#### Establish a message channel between two threads (avoids the main thread)
 
 This is the most advanced usage of the worker API for creating complex pipelines. See below for a multithreaded particle system that passes data to a render thread without touching the main thread.
 
@@ -94,7 +94,7 @@ manager.establishMessageChannel(
 ```
 
 
-#### WorkerManager Utilities
+### WorkerManager Utilities
 
 #### Events
 Allows subscribing to function outputs or outputs from specific origin points (or both) to automate the pipeline
@@ -109,13 +109,13 @@ manager.unsubEvent('threadprocess',sub); //or leave sub blank to unsubsribe all
 
 ```
 
-##### ThreadedCanvas
+#### ThreadedCanvas
 This class has macros for creating a canvas on a worker, which handles the rendering loop itself. See below for basic and advanced usage
 
-##### ProxyElement
+#### ProxyElement
 This class lets you mirror element inputs to a proxy, mainly for canvas/threejs operations. From a ThreeJS tutorial.
 
-##### GPU.js integration
+#### GPU.js integration
 We have some demonstrations of our gpujs integration on-hand for testing threaded kernels:
 
 FFT:
@@ -166,7 +166,9 @@ let result = await magic.run('callkernel',['transpose', [mat2]]);
 
 ```
 
-### Basic usage in an html file, with the webpacked library:
+
+
+## Basic usage in an html file, with the webpacked library:
 ```html
 
 <script src='./dist/magicworker.js' type='module'> 
@@ -207,7 +209,7 @@ magic.subEvent('threadresult',(res)=>{
 ```
 
 
-### Canvas usage (via a nodejs-based web app)
+## Canvas usage (via a nodejs-based web app)
 ```js
 
 import {WorkerManager, ThreadedCanvas} from 'magicworker'
@@ -260,7 +262,9 @@ canvasWorker.setValues({angleChange:0.001}); //set the rate of change for the ci
 
 ```
 
-### Advanced ThreeJS usage with several threads doing their own calculations 
+
+
+## Advanced ThreeJS usage with several threads doing their own calculations 
 - [Example (takes a few seconds to load ThreeJS)](https://app.brainsatplay.com#Multithreaded)
 
 ```js
