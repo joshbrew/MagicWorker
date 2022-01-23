@@ -204,6 +204,8 @@ magic.subEvent('threadresult',(res)=>{
     console.log("add result", res);
 });
 
+magic.run('add',[5,4],threadId); //now call the new function on the thread and get the result in the event or you can await this call or do .then()
+
 </script>
 
 ```
