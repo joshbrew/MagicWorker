@@ -24805,8 +24805,51 @@ class WorkerManager {
         });
       }
     } catch (err) {
-      console.log("Error, creating dummy worker (WARNING: Single Threaded). ERROR:", err);
-      newWorker = new DummyWorker(this.responses);
+      try {
+        console.log("Error, creating dummy worker (WARNING: Single Threaded). ERROR:", err);
+        newWorker = new DummyWorker(this.responses);
+      } catch (err2) {
+        console.error("DummyWorker Error: ", err2);
+      } // try { //blob worker which works in principle but gpujs doesn't want to transfer correctly, how do we fix it?
+      //   let threeUtil;
+      //   if(includeThree) {
+      //     await new Promise(async (resolve)=>{
+      //       let module = await this.dynamicImport('./workerThreeUtils.js');
+      //       resolve(module);
+      //     }).then((module) => {
+      //       threeUtil = new module.threeUtil();
+      //     });
+      //   }
+      //   let mgr = CallbackManager;
+      //   if(!document.getElementById('blobworker')) {
+      //     document.head.insertAdjacentHTML('beforeend',`
+      //       <script id='blobworker' type='javascript/worker'>
+      //         //gotta handle imports
+      //         const GPU = ${mgr.GPUUTILSCLASS.GPU.toString()};
+      //         console.log(GPU, GPU.__proto__.constructor.name);
+      //         const gpuUtils = ${mgr.GPUUTILSCLASS.toString()};
+      //         const Math2 = ${mgr.MATH2.toString()};
+      //         const ProxyManager = ${mgr.PROXYMANAGERCLASS.toString()};
+      //         const StateManager = ${mgr.EVENTSCLASS.STATEMANAGERCLASS.toString()};
+      //         const Events = ${mgr.EVENTSCLASS.toString()};
+      //         ${CallbackManager.toString()}
+      //         let manager = new CallbackManager();
+      //         manager.threeUtil = ${threeUtil?.toString()}
+      //         let canvas = manager.canvas; 
+      //         let ctx = manager.canvas.context;
+      //         let context = ctx; //another common reference
+      //         let counter = 0;
+      //         self.onmessage = ${worker.onmessage.toString()}
+      //       </script>
+      //     `);
+      //   }
+      //   let blob = new Blob([
+      //     document.querySelector('#blobworker').textContent
+      //   ], {type:"text/javascript"});
+      //   console.log("Blob worker!");
+      //   newWorker = new Worker(window.URL.createObjectURL(blob));
+      // } catch(err3) { console.error(err3); }
+
     } finally {
       if (newWorker) {
         let id = "worker_" + Math.floor(Math.random() * 10000000000);
@@ -25019,10 +25062,11 @@ class DummyWorker {
   constructor(responses) {
     this.responses = responses;
     this.manager = new workerCallbacks/* CallbackManager */.Y();
+    this.counter = 0;
   }
 
-  postMessage = input => {
-    let result = this.onmessage({
+  postMessage = async input => {
+    let result = await this.onmessage({
       data: input
     });
     this.responses.forEach((foo, _) => {
@@ -25033,23 +25077,24 @@ class DummyWorker {
   terminate() {}
 
   onerror = () => {};
-  onmessage = event => {
+  onmessage = async event => {
     // define gpu instance
     //console.log("worker executing...")
-    console.time("worker");
-    let output = "function not defined";
-    this.manager.callbacks.find((o, _) => {
-      if (o.case === event.data.foo) {
-        output = o.callback(event.data.input);
-        return true;
-      } else return;
-    }); // output some results!
+    //console.time("single threaded worker");
+    if (!event.data) return undefined;
+    let output = undefined;
+    let functionName;
+    if (event.data.foo) functionName = event.data.foo;else if (event.data.case) functionName = event.data.case;else if (event.data.cmd) functionName = event.data.cmd;else if (event.data.command) functionName = event.data.command;
+    let callback = this.manager.callbacks.get(functionName);
+    if (callback && event.data.input) output = await callback(this, event.data.input, event.data.origin);else if (callback && event.data.args) output = await callback(this, event.data.args, event.data.origin);else if (callback) output = await callback(this, undefined, event.data.origin); // output some results!
+    //console.timeEnd("single threaded worker");
 
-    console.timeEnd("worker");
     return {
       output: output,
       foo: event.data.foo,
-      origin: event.data.origin
+      origin: event.data.origin,
+      callbackId: event.data.callback,
+      counter: this.counter++
     };
   };
 }
