@@ -115,6 +115,57 @@ This class has macros for creating a canvas on a worker, which handles the rende
 ##### ProxyElement
 This class lets you mirror element inputs to a proxy, mainly for canvas/threejs operations. From a ThreeJS tutorial.
 
+##### GPU.js integration
+We have some demonstrations of our gpujs integration on-hand for testing threaded kernels:
+
+FFT:
+```js
+
+
+let arr = new Array(100).fill(1);
+
+console.time('fft (kernel writing to gpu)');
+magic.run('fft',[arr,1]).then(
+    (res) => {
+
+        console.timeEnd('fft (kernel writing to gpu)')    
+        console.time('fft (kernel saved on gpu this time)')
+        magic.run('fft',[arr,1]).then(
+        (res2) => {
+            console.timeEnd('fft (kernel saved on gpu this time)');
+            console.log('fft',res);
+        }).catch(console.error);
+    }).catch(console.error);
+
+```
+
+Add functions/kernels:
+```js
+
+function rms(arr, mean, len) { //root mean square error
+    var est = 0;
+    var vari = 0;
+    for (var i = 0; i < len; i++) {
+        vari = arr[i]-mean;
+        est += vari*vari;
+    }
+    return Math.sqrt(est/len);
+}
+
+magic.run('addgpufunc',[rms.toString()]);
+
+function transpose2DKern(mat2) { //Transpose a 2D matrix, meant to be combined
+    return mat2[gpuutils.thread.y][gpuutils.thread.x];
+}
+
+magic.run('addkernel',['transpose',transpose2DKern.toString()]
+
+let mat2 = [[1,2,3,4],[5,6,7,8],[8,9,10,11],[12,13,14,15]];
+
+let result = await magic.run('callkernel',['transpose', [mat2]]);
+
+```
+
 ### Basic usage in an html file, with the webpacked library:
 ```html
 
