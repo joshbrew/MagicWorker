@@ -3,8 +3,8 @@
 node_modules
 *.key
 
-lib
-lib-esm
+#lib
+#lib-esm
 _bundles
 
 docs/docs/reference
