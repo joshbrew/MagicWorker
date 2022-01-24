@@ -394,10 +394,10 @@
     "json-schema-traverse" "^0.4.1"
     "uri-js" "^4.2.2"
 
-"anotherstatemanager@^1.0.2":
-  "integrity" "sha512-EHUKxAee1uYsDJ8VEK2dUBVEb0o2af8EBHnx14rdziPVQSC+spnMsik+KNVaTdmEsrJqiIbjOse58o5DhEeEEw=="
-  "resolved" "https://registry.npmjs.org/anotherstatemanager/-/anotherstatemanager-1.0.3.tgz"
-  "version" "1.0.3"
+"anotherstatemanager@^1.0.4":
+  "integrity" "sha512-tF6SDOPADlu+CKjadIAVD392IT66gxbG660dIVv5Griore7EInaRBezsCJkxlSgl57n7YBbxg/XDd+Bb1F8SJA=="
+  "resolved" "https://registry.npmjs.org/anotherstatemanager/-/anotherstatemanager-1.0.4.tgz"
+  "version" "1.0.4"
   dependencies:
     "objectlisteners" "1.0.2"
 
@@ -436,6 +436,11 @@
   "version" "3.0.2"
   dependencies:
     "fill-range" "^7.0.1"
+
+"brainsatplay-math@^0.0.2":
+  "integrity" "sha512-7fjUfcmR2TcHtRh9jCds1WF1HZWhvvDytE6ngrkOUnMTQTbrDs0iAcp8NjMEiHumJRjcaD/c6PN60wIY0rjQaQ=="
+  "resolved" "https://registry.npmjs.org/brainsatplay-math/-/brainsatplay-math-0.0.2.tgz"
+  "version" "0.0.2"
 
 "browserslist@^4.14.5", "browserslist@^4.17.5":
   "integrity" "sha512-u2tbbG5PdKRTUoctO3NBD8FQ5HdPh1ZXPHzp1rwaa5jTc+RV9/+RlWiAIKmjRPQF+xbGM9Kklj5bZQFa2s/38A=="
@@ -703,10 +708,10 @@
   "resolved" "https://registry.npmjs.org/globals/-/globals-11.12.0.tgz"
   "version" "11.12.0"
 
-"gpujsutils@^1.0.4":
-  "integrity" "sha512-TaQYr/ceZgbffUSlf3sVFYJwQAVUWvtUeDTwbhSpKgzCHvfnFd+2T3NNIC3+qIBNbMhiojNXp5Khqdgy7ZX0hg=="
-  "resolved" "https://registry.npmjs.org/gpujsutils/-/gpujsutils-1.0.4.tgz"
-  "version" "1.0.4"
+"gpujsutils@^1.0.5":
+  "integrity" "sha512-fnuMa1PbVsKQG8UXjeYXT4ejig91TSV2SILzlOuwUI8rfNJHxZpSdBEx12yzBU+q04tUQEtZwNC7j1pjr9QFgA=="
+  "resolved" "https://registry.npmjs.org/gpujsutils/-/gpujsutils-1.0.5.tgz"
+  "version" "1.0.5"
 
 "graceful-fs@^4.1.2", "graceful-fs@^4.2.4", "graceful-fs@^4.2.9":
   "integrity" "sha512-NtNxqUcXgpW2iMrfqSfR73Glt39K+BLwWsPs94yR63v45T0Wbej7eRmL5cWfwEgqXnmjQp3zaJTshdRW/qC2ZQ=="

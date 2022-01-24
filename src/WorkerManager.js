@@ -3,9 +3,9 @@ import {CallbackManager} from './lib/workerCallbacks'
 
 import worker from './magic.worker.js' // internal worker
 
-import { Events } from './lib/Event';
-import { ProxyElement, initProxyElement } from './lib/ProxyElement';
-import { ThreadedCanvas } from './lib/ThreadedCanvas';
+import { Events } from './lib/utils/Event';
+import { ProxyElement, initProxyElement } from './lib/frontend/ProxyElement';
+import { ThreadedCanvas } from './lib/frontend/ThreadedCanvas';
 
 export class WorkerManager {
     url;

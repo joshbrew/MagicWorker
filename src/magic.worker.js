@@ -22,7 +22,7 @@ self.onmessage = async (event) => {
     }
     if(input.context !== undefined ) { //set the context
       manager.ctx = manager.canvas.getContext(input.context);
-      manager.context = manager.ctx;
+      manager.context = manager.ctx; //alt name
     } 
 
     let eventSetting = manager.checkEvents(input.foo,input.origin);

@@ -214,7 +214,7 @@ magic.subEvent('threadresult',(res)=>{
 
 import {WorkerManager, ThreadedCanvas} from 'magicworker'
 
-let manager = new WorkerManager(undefined,0);
+let workers = new WorkerManager(undefined,0);
 
 let canvasWorkerId = workers.addWorker();
 
@@ -248,7 +248,7 @@ let draw = (self, args, origin) => {
 }
 
 let canvasWorker = new ThreadedCanvas(       /
-    manager,
+    workers,
     canvas,                                  //canvas element to transfer to offscreencanvas
     '2d',                                    //canvas context setting       
     draw,                                    //pass the custom draw function
@@ -272,7 +272,7 @@ canvasWorker.setValues({angleChange:0.001}); //set the rate of change for the ci
 import {WorkerManager, ThreadedCanvas, ProxyElement} from 'magicworker'
 import {DynamicParticles} from 'dynamicparticles' //another library for this example
 
-let manager = new WorkerManager();
+let workers = new WorkerManager();
 
 let worker1Id = workers.addWorker();
 let worker2Id = workers.addWorker();
@@ -282,7 +282,7 @@ let canvas = document.querySelector('canvas'); //canvas in the html page
 let origin = 0; //main thread Id
 
 let canvasWorker = new ThreadedCanvas(   
-    manager,
+    workers,
     canvas,        //canvas element to transfer to offscreencanvas
     undefined,   //canvas context setting       
     undefined,  //pass the custom draw function

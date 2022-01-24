@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 228:
+/***/ 182:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -738,16 +738,6 @@ class StateManager {
         }    
     }
 
-    //Removes all references to a state key i.e. subscriptions and data
-    removeState(key, sequential=false){
-            if (sequential) this.unsubscribeAllSequential(key);
-            else this.unsubscribeAll(key);
-            delete this.data[key]
-
-            // Log Update
-            this.setSequentialState({stateRemoved: key})
-    }
-
     setupSynchronousUpdates = () => {
         if(!this.listener.hasKey('pushToState')) {
             //we won't add this listener unless we use this function
@@ -1059,10 +1049,17 @@ class StateManager {
         else console.error("Specify a subcription function index");
     }
 
-    unsubscribeAll(key) { // Removes the listener for the key (including the animation loop)
+    unsubscribeAll(key) { // Removes all listeners for a key (including the animation loop)
+        this.unsubscribeAllSequential(key);
+        this.unsubscribeAllTriggers(key);
         this.clearAllKeyResponses(key);
         if(this.data[key]) delete this.data[key];
+
+        
+        if(this.listener.hasKey('pushToState')) this.setSequentialState({stateRemoved: key})
     }
+   
+    removeState = this.unsubscribeAll;
 
     //runs only one animation frame to check all state keys
     runSynchronousListeners() {
@@ -1283,7 +1280,7 @@ if(JSON.stringifyWithCircularRefs === undefined) {
 }
 
 /* harmony default export */ const anotherstatemanager_StateManager = ((/* unused pure expression or super */ null && (StateManager)));
-;// CONCATENATED MODULE: ./src/lib/Event.js
+;// CONCATENATED MODULE: ./src/lib/utils/Event.js
 //multithreaded event manager, spawn one per thread and import a single instance elsewhere.
 
 /**
@@ -1399,1269 +1396,1867 @@ class Events {
 
 /***/ }),
 
-/***/ 343:
+/***/ 872:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "d": () => (/* binding */ Math2)
+/* harmony export */   "yy": () => (/* binding */ dynamicImport),
+/* harmony export */   "Nc": () => (/* binding */ parseFunctionFromText)
 /* harmony export */ });
-//By Joshua Brewster (AGPL)
-
-/**
- * Math2 Contains All Static Methods
- * We'll add more useful static things like filter kernels etc. as we get to making them.
- * 
- * //Just type these and the variable inputs that pop up should be easy to follow. Everything is commented otherwise till we document it
- * genSineWave() //generate a sine wave
- * getSineAmplitude() //get amplitude of a sine at time t
- * mean() //array mean
- * mode() //array mode
- * std() //standard dev
- * relError() //relative error
- * informationEntropy() //trying to build a maxent distribution off of this stuff
- * zscore() //array z score
- * variance() //variance
- * dot() //dot product
- * cross3D() //3d cross product
- * magnitude() //vector magnitude
- * distance() //distance function p1-p2
- * normalize() //array normalization
- * newtonsMethod() //root approximation
- * integral() //1d integral
- * dintegral() //2d integral
- * tintegral() //3d integral
- * pintegral() //2d path integral
- * makeVec() 
- * transpose(mat) //2d mat transpose
- * matmul(a,b) 
- * matscale(mat,scalar)
- * matadd(a,b)
- * matsub(a,b)
- * normalDistribution(samples=[], normalize=true) //create a norall (gaussian) distribution
- * expectedValue(samples=[],probabilities=this.normalDistribution(samples)) //get expected value of an array
- * originMoment(samples=[],probabilities=this.normalDistribution(samples),order=1) //statistical moment about origin
- * centralMoment(samples=[],probabilities=this.normalDistribution(samples),order=1) //statistical moment about mean
- * linearDiscriminantAnalysis(samples=[], classifier=[]) //LDA
- * conv1D(arr=[],kern=[],pad=0) //1d convolution //1d convolution
- * conv2D(mat=[[],[],[]],kern=[[],[],[]],pad=0) //2d convolution
- * cov2d(mat) //2d covariance
- * cov1d(arr1=[],arr2=[]) //1d covariance
- * cov3d(x=[],y=[],z=[]) //3d covariance
- * covNd(dimensionalData=[]) //nd covariance
- * eigens2x2(mat=[[1,2],[3,4]]) //fast 2x2 eigenvalue 
- * eigenvectors2x2(mat=[[1,2],[3,4]], eigens=[1,2]) //fast 2x2 eigenvector 
- * fastpca2d(xarr,yarr) //fast 2d pca
- * crosscorrelation(arr1,arr2) //crosscor
- * autocorrelation(arr1) //autocor
- * correlograms(dat=[[],[]]) //return cross correlations of many signals
- * sma(arr=[], window) //simple moving average 
- * sum(arr=[]) //array sum
- * reduceArrByFactor(arr,factor=2) //reduce array sizes
- * makeArr(startValue, stopValue, nSteps) //linspace
- * interpolateArray(data, fitCount, scalar=1) 
- * isExtrema(arr,critical='peak') //peak or valley
- * isCriticalPoint(arr,critical='peak') //peak, valley
- * peakDetect = (smoothedArray,type='peak',window=49) //wider window to find less peaks
- * getPeakThreshold(arr, peakIndices, thresholdVar)
- * 
- * eigens(M=[[],[]], tolerance=0.0001, max_iterations=1000)
- * pca(mat=[[],[]],tolerance = 0.00001) //power iteration method PCA
- * eigenvalue_of_vector(mat, eigenvector)
- * power_iteration(mat, tolerance=0.00001, max_iterations=1000)
- * squared_difference(v1, v2)
- * flatten_vector(v) //column to row
- * column(mat, x) //row to column
- * 
- */
-class Math2 {
-  constructor() {} //----------------------------------------------------------------
-  //-------------------- Static Variables---------------------------
-  //----------------------------------------------------------------
-  //Throwing a bunch in here for the hell of it
-
-
-  static TWO_PI = Math.PI * 2; //2PI
-
-  static C = 299792458; //speed of light m/s
-
-  static G = 6.67430e-11; //Newton's gravitation constant N*m^2 / kg^2
-
-  static h = 6.62607015e-34; //Planck constant J*s
-
-  static R = 8.31432e3; //Universal gas constant J / kg*mol*K
-
-  static Ra = 287; //Air gas constant J / kg*K
-
-  static H = 69.3; //Hubble constant km/s/Mpc 
-
-  static kbar = 1.054571817e-34; //Dirac constant J*s
-
-  static kB = 1.380649e-23; //Boltzmann constant J/K
-
-  static ke = 8.9875517923e9; //Coulomb constant kg * m^3 * s^-2 * C^-2
-
-  static me = 9.1093837015e-31; //electron mass kg
-
-  static mp = 1.67262192369e-27; //proton mass kg
-
-  static mn = 1.67492749804e-27; //neutron mass kg
-
-  static P0 = 1.01325e5; //Sea level pressure N/m^2
-
-  static T0 = 288.15; //Sea level room temperature K
-
-  static p0 = 1.225; //Sea level air density kg/m^3
-
-  static Na = 6.0220978e23; //Avogadro's number 1 / kg*mol
-
-  static y = 1.405; //Adiabatic constant
-
-  static M0 = 28.96643; //Sea level molecular weight
-
-  static g0 = 9.80665; //Sea level gravity m/s^2
-
-  static Re = 6.3781e6; //Earth radius m
-
-  static B = 1.458e-6; //Thermal constant Kg / m*s*sqrt(kg)
-
-  static S = 110.4; //Sutherland's constant K
-
-  static Sigma = 3.65e-10; //Collision diameter of air m
-
-  static imgkernels = {
-    edgeDetection: [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]],
-    boxBlur: [[1 / 9, 1 / 9, 1 / 9], [1 / 9, 1 / 9, 1 / 9], [1 / 9, 1 / 9, 1 / 9]],
-    sobelLeft: [[1, 0, -1], [2, 0, -2], [1, 0, -1]],
-    sobelRight: [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]],
-    sobelTop: [[1, 2, 1], [0, 0, 0], [-1, -2, -1]],
-    sobelBottom: [[-1, 2, 1], [0, 0, 0], [1, 2, 1]],
-    identity: [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
-    gaussian3x3: [[1, 2, 1], [2, 4, 2], [1, 2, 1]],
-    guassian7x7: [[0, 0, 0, 5, 0, 0, 0], [0, 5, 18, 32, 18, 5, 0], [0, 18, 64, 100, 64, 18, 0], [5, 32, 100, 100, 100, 32, 5], [0, 18, 64, 100, 64, 18, 0], [0, 5, 18, 32, 18, 5, 0], [0, 0, 0, 5, 0, 0, 0]],
-    emboss: [[-2, -1, 0], [-1, 1, 1], [0, 1, 2]],
-    sharpen: [[0, -1, 0], [-1, 5, -1], [0, -1, 0]]
-  }; //----------------------------------------------------------------
-  //-------------------- Static Functions --------------------------
-  //----------------------------------------------------------------
-  //Generate sinewave, you can add a noise frequency in too. Array length will be Math.ceil(fs*nSec)
-
-  static genSineWave(freq = 20, peakAmp = 1, nSec = 1, fs = 512, freq2 = 0, peakAmp2 = 1) {
-    var sineWave = [];
-    var t = [];
-    var increment = 1 / fs; //x-axis time increment based on sample rate
-
-    for (var ti = 0; ti < nSec; ti += increment) {
-      var amplitude = Math.sin(2 * Math.PI * freq * ti) * peakAmp;
-      amplitude += Math.sin(2 * Math.PI * freq2 * ti) * peakAmp2; //Add interference
-
-      sineWave.push(amplitude);
-      t.push(ti);
-    }
-
-    return [t, sineWave]; // [[times],[amplitudes]]
-  } //get the sine amplitude at a particular time (seconds)
-
-
-  static getSineAmplitude(frequency = 20, peakAmplitude = 1, ti = 0, tOffset = 0) {
-    return Math.sin(this.TWO_PI * frequency * ti + tOffset) * peakAmplitude;
-  } //average value of array
-
-
-  static mean(arr) {
-    var sum = arr.reduce((prev, curr) => curr += prev);
-    return sum / arr.length;
-  } //array mode (most commonly occurring number)
-
-
-  static mode(arr) {
-    return arr.sort((a, b) => arr.filter(v => v === a).length - arr.filter(v => v === b).length).pop();
-  } //standard deviation
-
-
-  static std(arr, mean = undefined) {
-    let avg = mean;
-    if (!mean) avg = this.mean(arr);
-    let summed = 0;
-
-    for (let i = 0; i < arr.length; i++) {
-      let subbed = arr[i] - avg;
-      summed += subbed * subbed;
-    }
-
-    return Math.sqrt(summed / arr.length);
-  } //find the relative error of predicted results
-
-
-  static relError(actual = [], forecast = [], abs = true) {
-    if (actual.length !== forecast.length) throw new Error('Input arrays of same length!');
-    let i = actual.length;
-    let d = []; //relative errors
-
-    for (let j = 0; j < i; j++) {
-      let dd = (actual[j] - forecast[j]) / actual[j];
-      if (abs) dd = Math.abs(dd);
-      d.push(dd);
-    }
-
-    return d;
-  } //returns information entropy in natural units (base e)
-
-
-  static informationEntropy(probabilities = []) {
-    let entropy = [];
-    let len = probabilities.length;
-
-    for (let i = 0; i < len; i++) {
-      let ent = probabilities[i] * Math.log(probabilities[i]);
-      if (isNaN(ent)) ent = 0;
-      entropy.push(ent);
-    }
-
-    return entropy;
-  } //array zscore (probabilities)
-
-
-  static zscore(arr) {
-    let mean = this.mean(arr);
-    let std = this.std(arr, mean);
-    let z = [];
-
-    for (let i = 0; i < arr.length; i++) {
-      z.push((arr[i] - mean) / std);
-    }
-
-    return z;
-  }
-
-  static variance(arr) {
-    //Variance of 1D input arrays of length n
-    var mean = this.mean(arr);
-    return arr.reduce((a, b) => a + (b - mean) ** 2, 0) / arr.length;
-  }
-
-  static dot(vec1, vec2) {
-    //nDimensional vector dot product
-    var dot = 0;
-
-    for (var i = 0; i < vec1.length; i++) {
-      dot += vec1[i] * vec2[i];
-    }
-
-    return dot;
-  }
-
-  static cross3D(vec1, vec2) {
-    //3D vector cross product
-    return [vec1[1] * vec2[2] - vec1[2] * vec2[1], //x
-    vec1[2] * vec2[0] - vec1[0] * vec2[2], //y
-    vec1[0] * vec2[1] - vec1[1] * vec2[0] //z
-    ];
-  }
-
-  static magnitude(vec) {
-    //nDimensional magnitude
-    var sqrd = 0;
-    vec.forEach(c => {
-      sqrd += c * c;
-    });
-    return Math.sqrt(sqrd);
-  }
-
-  static distance(point1, point2) {
-    //nDimensional vector distance function
-    var dsqrd = 0;
-    point1.forEach((c, i) => {
-      dsqrd += (point2[i] - c) * (point2[i] - c);
-    });
-    return Math.sqrt(dsqrd);
-  }
-
-  static normalize(vec) {
-    //nDimensional vector normalization
-    var norm = 0;
-    norm = this.magnitude(vec);
-    var vecn = [];
-    vec.forEach((c, i) => {
-      vecn.push(c * norm);
-    });
-    return vecn;
-  } //return the quadratic roots based on your input ax^2 + bx + c = 0
-
-
-  static quadraticFormula(a, b, c) {
-    let bbmac4 = Math.sqrt(b * b - 4 * a * c);
-    if (!isNaN(bbmac4)) return ['complex', 'complex'];
-
-    let _a2 = 1 / (2 * a);
-
-    if (bbmac4 === 0) return [b * _a2];
-    let nb = -b;
-    return [(nb + bbmac4) * _a2, (nb - bbmac4) * _a2];
-  } //approximation of function roots. Provide a function (1d), window, and precision and it will return approximate roots along that window
-
-
-  static newtonsMethod(foo = x => {
-    return Math.pow(x, 5) + x * x - x - 0.2;
-  }, start = 0, end = 1, precision = 0.01, attempts = 10) {
-    let roots = [];
-
-    for (let i = 0; i < attempts; i++) {
-      let seedx = Math.random() * (end - start);
-      let guess = foo(seedx);
-      let guess2 = foo(seedx + precision);
-      let slope = (guess2 - guess) / precision;
-      let xn = seedx + precision;
-
-      while (Math.abs(slope) > precision) {
-        let step = -guess / slope;
-        let xn1 = xn + step;
-        guess = guess2;
-        guess2 = foo(xn1);
-        let slope = (guess2 - guess) / (xn1 - xn);
-      }
-
-      let idx;
-      let f = roots.find((root, i) => {
-        if (Math.abs(xn1 - root) < precision) {
-          idx = i;
-          return true;
-        }
-      });
-      if (f) roots[idx] = (xn1 + f) * 0.5;else roots.push(xn1);
-    }
-
-    return roots;
-  } //2D integral approximation using rectangular area under the curve. If you need absolute values be sure to return that.
-
-
-  static integral = (func = x => {
-    let y = x;
-    return y;
-  }, range = [], stepx = 0.01) => {
-    let area = 0;
-
-    for (let i = range[0]; i < range[1]; i += stepx) {
-      let y = func(i);
-      area += y * stepx;
-    }
-
-    return area;
-  }; //3D double integral approximation
-
-  static dintegral = (func = (x, y) => {
-    let z = x + y;
-    return z;
-  }, range = [[], []], stepx = 0.01, stepy = stepx) => {
-    let volume = 0;
-
-    for (let i = range[0][0] + stepx; i < range[0][1]; i += stepx) {
-      for (let j = range[1][0] + stepy; j < range[1][1]; j += stepy) {
-        let z = func(i, j);
-        volume += z * stepx * stepy;
-      }
-    }
-
-    return volume;
-  }; //4D triple integral approximation
-
-  static tintegral = (func = (x, y, z) => {
-    let w = x + y + z;
-    return w;
-  }, range = [[], [], []], stepx = 0.01, stepy = stepx, stepz = stepx) => {
-    let volume = 0;
-
-    for (let i = range[0][0] + stepx; i < range[0][1]; i += stepx) {
-      for (let j = range[1][0] + stepy; j < range[1][1]; j += stepy) {
-        for (let k = range[2][0] + stepz; k < range[2][1]; k += stepz) {
-          let w = func(i, j, k);
-          volume += w * stepx * stepy * stepz;
-        }
-      }
-    }
-
-    return volume;
-  }; //2D path integral approximation (the length of a curve)
-
-  static pintegral = (func = x => {
-    let y = x;
-    return y;
-  }, range = [], stepx = 0.01) => {
-    let length = 0;
-    let y0 = undefined;
-    let yi = undefined;
-
-    for (let i = range[0]; i < range[1]; i += stepx) {
-      y0 = yi;
-      yi = func(i);
-      if (y0) length += this.distance([0, y0], [stepx, yi]);
-    }
-
-    return length;
+/* unused harmony exports getFunctionBody, getFunctionHead, buildNewFunction, isFunction */
+let dynamicImport = async url => {
+  let module = await __webpack_require__(377)(url);
+  return module;
+}; //Get the text inside of a function (regular or arrow);
+
+function getFunctionBody(methodString) {
+  return methodString.toString().replace(/^\W*(function[^{]+\{([\s\S]*)\}|[^=]+=>[^{]*\{([\s\S]*)\}|[^=]+=>(.+))/i, '$2$3$4');
+}
+function getFunctionHead(methodString) {
+  let fnstring = methodString.toString();
+  return fnstring.slice(0, fnstring.indexOf('{') + 1);
+}
+function buildNewFunction(head, body) {
+  let newFunc = eval(head + body + '}');
+  return newFunc;
+}
+function isFunction(string) {
+  let regex = new RegExp('(|[a-zA-Z]\w*|\([a-zA-Z]\w*(,\s*[a-zA-Z]\w*)*\))\s*=>');
+  let func = typeof string === 'string' ? string.substring(0, 10).includes('function') : false;
+  let arrow = typeof string === 'string' ? regex.test(string) : false;
+  if (func || arrow) return true;else return false;
+}
+function parseFunctionFromText(method) {
+  //Get the text inside of a function (regular or arrow);
+  let getFunctionBody = methodString => {
+    return methodString.replace(/^\W*(function[^{]+\{([\s\S]*)\}|[^=]+=>[^{]*\{([\s\S]*)\}|[^=]+=>(.+))/i, '$2$3$4');
   };
 
-  static makeVec(point1, point2) {
-    //Make vector from two nDimensional points (arrays)
-    var vec = [];
-    point1.forEach((c, i) => {
-      vec.push(point2[i] - c);
-    });
-    return vec;
+  let getFunctionHead = methodString => {
+    let startindex = methodString.indexOf(')');
+    return methodString.slice(0, methodString.indexOf('{', startindex) + 1);
+  };
+
+  let newFuncHead = getFunctionHead(method);
+  let newFuncBody = getFunctionBody(method);
+  let newFunc;
+
+  if (newFuncHead.includes('function ')) {
+    let varName = newFuncHead.split('(')[1].split(')')[0];
+    newFunc = new Function(varName, newFuncBody);
+  } else {
+    if (newFuncHead.substring(0, 6) === newFuncBody.substring(0, 6)) {
+      //newFuncBody = newFuncBody.substring(newFuncHead.length);
+      let varName = newFuncHead.split('(')[1].split(')')[0]; //console.log(varName, newFuncHead ,newFuncBody);
+
+      newFunc = new Function(varName, newFuncBody.substring(newFuncBody.indexOf('{') + 1, newFuncBody.length - 1));
+    } else newFunc = eval(newFuncHead + newFuncBody + "}");
   }
 
-  static transpose(mat) {
-    return mat[0].map((_, colIndex) => mat.map(row => row[colIndex]));
-  } //2D Matrix multiplication from: https://stackoverflow.com/questions/27205018/multiply-2-matrices-in-javascript
+  return newFunc;
+}
 
+/***/ }),
 
-  static matmul(a, b) {
-    var aNumRows = a.length,
-        aNumCols = a[0].length,
-        bNumRows = b.length,
-        bNumCols = b[0].length,
-        m = new Array(aNumRows); // initialize array of rows
+/***/ 639:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-    for (var r = 0; r < aNumRows; ++r) {
-      m[r] = new Array(bNumCols); // initialize the current row
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "h": () => (/* binding */ workerCPU)
+/* harmony export */ });
+/* harmony import */ var brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(346);
+//Adds Math functions and stuff that are CPU-based. Not much here right now
 
-      for (var c = 0; c < bNumCols; ++c) {
-        m[r][c] = 0; // initialize the current cell
+class workerCPU {
+  constructor(callbackManager) {
+    this.callbackManager = callbackManager;
+    callbackManager.Math2 = brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__/* .Math2 */ .d; //should be globally available anyway
 
-        for (var i = 0; i < aNumCols; ++i) {
-          m[r][c] += a[r][i] * b[i][c];
-        }
+    this.callbacks = [{
+      case: 'xcor',
+      callback: (self, args, origin) => {
+        return brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__/* .Math2.crosscorrelation */ .d.crosscorrelation(...args);
       }
-    }
-
-    return m;
-  } //Apply scalar to 2D matrix 
-
-
-  static matscale(mat, scalar) {
-    let m = [];
-
-    for (var i = 0; i < mat.length; i++) {
-      m[i] = [];
-
-      for (let j = 0; j < mat[0].length; j++) {
-        m[i][j] = mat[i][j] * scalar;
+    }, {
+      case: 'autocor',
+      callback: (self, args, origin) => {
+        return brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__/* .Math2.autocorrelation */ .d.autocorrelation(args);
       }
-    }
-
-    return m;
-  } //2d matrix addition
-
-
-  static matadd(a, b) {
-    let m = [];
-
-    for (let i = 0; i < a.length; i++) {
-      m[i] = [];
-
-      for (var j = 0; j < a[0].length; j++) {
-        m[i][j] = a[i][j] + b[i][j];
+    }, {
+      case: 'cov1d',
+      callback: (self, args, origin) => {
+        return brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__/* .Math2.cov1d */ .d.cov1d(...args);
       }
-    }
-
-    return m;
-  } //2d matrix subtraction
-
-
-  static matsub(a, b) {
-    let m = [];
-
-    for (let i = 0; i < a.length; i++) {
-      m[i] = [];
-
-      for (var j = 0; j < a[0].length; j++) {
-        m[i][j] = a[i][j] - b[i][j];
+    }, {
+      case: 'cov2d',
+      callback: (self, args, origin) => {
+        return brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__/* .Math2.cov2d */ .d.cov2d(args);
       }
-    }
-
-    return m;
-  } //return a histogram of the array, use nBins to override binSize
-
-
-  static histogram(arr = [], binSize = 1, nBins = undefined) {
-    let copy = [...arr];
-    copy.sort(function (a, b) {
-      return a - b;
-    }); //ascending sort
-
-    let binStart = Math.min(...copy);
-
-    if (typeof nBins === 'number') {
-      let binEnd = Math.max(...copy);
-      binSize = Math.abs((binEnd - binStart) / (nBins - 1));
-    }
-
-    let j = binStart;
-    let binx = [];
-    let biny = [];
-
-    for (let i = 0; i < copy.length; i++) {
-      let binidx = binSize * j;
-
-      if (copy[i] > binStart + binidx) {
-        j++;
-        binidx += binSize;
-        let binmin = binStart + binidx;
-        let binmid = binmin + binidx * 0.5;
-        binx.push(binmid);
-        biny.push(0);
+    }, {
+      case: 'sma',
+      callback: (self, args, origin) => {
+        return brainsatplay_math__WEBPACK_IMPORTED_MODULE_0__/* .Math2.sma */ .d.sma(...args);
       }
-
-      biny[biny.length - 1]++;
-    }
-
-    return [binx, biny];
-  } //Get probability densities for the samples, set a cutoff to avoid obscenely small numbers
-
-
-  static normalDistribution(samples = [], normalize = true, cutoff = 0.0001) {
-    let m = this.mean(samples);
-    let vari = this.variance(samples);
-    let nSamples = samples.length;
-    let probabilities = [];
-    let denom = 1 / (this.TWO_PI * vari);
-
-    let _variance = 1 / vari;
-
-    let sum = 0; //for normalization
-
-    for (let i = 0; i < nSamples; i++) {
-      let px = Math.exp(-0.5 * Math.pow((samples[i] - m) * _variance, 2)) * denom;
-      if (px < cutoff) px = 0;
-      probabilities.push(px);
-      sum += px;
-    }
-
-    if (normalize) {
-      let _sum = 1 / sum;
-
-      probabilities = probabilities.map(x => x * _sum);
-    }
-
-    return probabilities;
+    } //etc...
+    ];
+    this.addCallbacks();
   }
 
-  static expectedValue(samples = [], probabilities = this.normalDistribution(samples)) {
-    return samples.reduce((sum, item, idx) => sum + item * probabilities[idx]);
-  } //moment about the origin (statistics)
-
-
-  static originMoment(samples = [], probabilities = this.normalDistribution(samples), order = 1) {
-    return samples.reduce((sum, item, idx) => sum + Math.pow(item, order) * probabilities[idx]);
-  } //moment about the population mean (statistics)
-
-
-  static centralMoment(samples = [], probabilities = this.normalDistribution(samples), order = 1) {
-    let m = this.mean(samples);
-    return samples.reduce((sum, item, idx) => sum + Math.pow(item - m, order) * probabilities[idx] / samples.length);
-  }
-
-  static linearDiscriminantAnalysis(samples = [], classifier = []) {
-    let mean = this.mean(samples);
-    let meank = this.mean(classifier);
-    let covariance = this.cov1d(samples, classifier);
-    let probs = this.normalDistribution(samples);
-    let dk = [];
-
-    for (let i = 0; i < samples.length; i++) {
-      dk.push(x[i] * covariance * meank - .5 * mean * covariance * meank + Math.log10(probs[i]));
-    }
-
-    return dk;
-  } //1D convolution (filtering)
-
-
-  static conv1D(arr = [], kern = [1 / 3, 1 / 3, 1 / 3], pad = Math.floor(kern.length * 0.5)) {
-    let result = [];
-
-    let _n = 1 / kern.length;
-
-    if (pad > 0) {
-      let pads = new Array(pad).fill(0);
-      arr = [...pads, ...arr, ...pads];
-    }
-
-    let start = Math.floor(kern.length * 0.5); //offset since kernel will reduce size of array
-
-    let end = arr.length - kern.length + start; //end index
-
-    for (let i = start; i < end; i++) {
-      let acc = 0;
-
-      for (let j = 0; j < kern.length; j++) {
-        acc += arr[i - start] * kern[j];
-      }
-
-      result.push(acc * _n);
-    }
-
-    return result;
-  } //2D convolution (filtering), input 2d mat and 2d kernel 
-
-
-  static conv2D(mat = [[], [], []], kern = [[], [], []], pad = 0) {
-    let result = new Array(mat.length - Math.ceil(kern.length * 0.5)).fill([]);
-    let mat_t;
-    let kern_t = Math2.transpose(kern_t);
-
-    if (pad > 0) {
-      let pads = new Array(pad).fill(0); //transpose to col/row
-
-      mat_t = Math2.transpose(mat); //hard copy
-
-      for (let i = 0; i < mat_t.length; i++) {
-        mat_t[i] = [...pads, ...mat_t[i], ...pads];
-      } //transpose back
-
-
-      mat = Math2.transpose(mat_t);
-
-      for (let j = 0; j < mat.length; j++) {
-        mat[j] = [...pads, ...mat[j], ...pads];
-      }
-    }
-
-    let startr = Math.floor(kern[0].length * 0.5); //offset since kernel will reduce size of array
-
-    let startl = Math.floor(kern_t[0].length * 0.5); //offset since kernel will reduce size of array
-
-    let endr = mat[0].length - kern[0].length + startr; //row end
-
-    let endl = mat_t[0].length - kern_t[0].length + startl; //column end
-
-    let _n = 1 / (kern[0].length * kern_t[0].length);
-
-    let iters = endr * endl; //number of convolutions to perform
-
-    let i = startr;
-    let x;
-    let y = startl;
-
-    while (i < iters) {
-      let acc = 0;
-      x = i % mat[0].length;
-
-      if (x === 0) {
-        y++;
-      }
-
-      for (let j = 0; j < kern[0].length; j++) {
-        for (let k = 0; k < kern_t[0].length; j++) {
-          acc += mat[y - startl + k][x - startr + j] * kern[k][j];
-        }
-
-        result[y].push(acc * _n);
-      }
-
-      i++;
-    }
-
-    return result;
-  } //2D matrix covariance (e.g. for lists of signals). Pretty fast!!!
-
-
-  static cov2d(mat) {
-    //[[x,y,z,w],[x,y,z,w],...] input list of vectors of the same length
-    //Get variance of rows and columns
-    //console.time("cov2d");
-    var mattransposed = this.transpose(mat); //console.log(mattransposed)
-
-    var matproducts = [];
-    var rowmeans = [];
-    var colmeans = [];
-    mat.forEach((row, idx) => {
-      rowmeans.push(this.mean(row));
-    });
-    mattransposed.forEach((col, idx) => {
-      colmeans.push(this.mean(col));
-    });
-    mat.forEach((row, idx) => {
-      matproducts.push([]);
-
-      for (var col = 0; col < row.length; col++) {
-        matproducts[idx].push((mat[idx][col] - rowmeans[idx]) * (mat[idx][col] - colmeans[col]) / (row.length - 1));
-      }
-    });
-    /*
-    	mat[y][x] = (x - rowAvg)*(x - colAvg) / (mat[y].length - 1);
-    */
-    //console.log(matproducts);
-    //Transpose matrix
-
-    var matproductstransposed = this.transpose(matproducts); //Matrix multiplication, stolen from: https://stackoverflow.com/questions/27205018/multiply-2-matrices-in-javascript
-
-    var aNumRows = matproducts.length,
-        aNumCols = matproducts[0].length,
-        bNumRows = matproductstransposed.length,
-        bNumCols = matproductstransposed[0].length,
-        m = new Array(aNumRows); // initialize array of rows
-
-    for (var r = 0; r < aNumRows; ++r) {
-      m[r] = new Array(bNumCols); // initialize the current row
-
-      for (var c = 0; c < bNumCols; ++c) {
-        m[r][c] = 0; // initialize the current cell
-
-        for (var i = 0; i < aNumCols; ++i) {
-          m[r][c] += matproducts[r][i] * matproductstransposed[i][c] / (mat[0].length - 1); //divide by row length - 1
-        }
-      }
-    } //console.timeEnd("cov2d");
-
-
-    return m; //Covariance matrix
-  } //Covariance between two 1D arrays
-
-
-  static cov1d(arr1 = [], arr2 = []) {
-    return this.cov2d([arr1, arr2]);
-  } //3d covariance
-
-
-  static cov3d(x = [], y = [], z = []) {
-    return [[this.cov1d(x, x), this.cov1d(x, y), this.cov1d(x, z)], [this.cov1d(y, x), this.cov1d(y, y), this.cov1d(y, z)], [this.cov1d(z, x), this.cov1d(z, y), this.cov1d(z, z)]];
-  } //n-dimensional covariance matrix
-
-
-  static covNd(dimensionalData = []) {
-    let covariance = [];
-    dimensionalData.forEach((arr, i) => {
-      covariance.push([]);
-      dimensionalData.forEach((arr2, j) => {
-        covariance[i].push(this.cov1d(arr, arr2));
-      });
-    });
-  } //fast 2x2 eigenvalue calculator: https://www.youtube.com/watch?v=e50Bj7jn9IQ
-
-
-  static eigens2x2(mat = [[1, 2], [3, 4]]) {
-    let det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
-    let mean = (mat[0][0] + mat[1][1]) * .5;
-    let sqrt = Math.sqrt(mean * mean - det);
-    let eig1 = mean + sqrt;
-    let eig2 = mean - sqrt;
-    return [eig1, eig2];
-  } //http://math.colgate.edu/~wweckesser/math312Spring06/handouts/IMM_2x2linalg.pdf
-
-
-  static eigenvectors2x2(mat = [[1, 2], [3, 4]], eigens = [1, 2]) {
-    let v1 = [-mat[0][1], mat[0][0] - eigens[0]];
-
-    if (v1[0] === 0 && v1[1] === 0) {
-      v1[0] = mat[1][1] - eigens[0];
-      v1[1] = -mat[1][0];
-    }
-
-    let v2 = [-mat[0][1], mat[0][0] - eigens[1]];
-
-    if (v2[0] === 0 && v2[1] === 0) {
-      v2[0] = mat[1][1] - eigens[1];
-      v2[1] = -mat[1][0];
-    }
-
-    return [v1, v2];
-  } //Fast PCA for 2D datasets https://towardsdatascience.com/a-one-stop-shop-for-principal-component-analysis-5582fb7e0a9c
-
-
-  static fastpca2d(xarr, yarr) {
-    let cov1d = this.cov1d(xarr, yarr); //yields a 2x2 matrix
-
-    let eigs = this.eigens2x2(cov1d);
-    if (eigs[1] > eigs[0]) eigs.reverse();
-    let evs = this.eigenvectors2x2(cov1d, eigs);
-    console.log(eigs, evs);
-    return [eigs, evs];
-  } //Simple cross correlation.
-
-
-  static crosscorrelation(arr1, arr2) {
-    //console.time("crosscorrelation");
-    var arr2buf = [...arr2, ...Array(arr2.length).fill(0)];
-    var mean1 = this.mean(arr1);
-    var mean2 = this.mean(arr2); //Estimators
-
-    var arr1Est = arr1.reduce((sum, item) => sum += Math.pow(item - mean1, 2));
-    arr1Est = Math.sqrt(arr1Est);
-    var arr2Est = arr2.reduce((sum, item) => sum += Math.pow(item - mean1, 2));
-    arr2Est = Math.sqrt(arr2Est);
-
-    var _arrEstsMul = 1 / (arr1Est * arr2Est);
-
-    var correlations = new Array(arr1.length).fill(0);
-
-    for (var delay = 0; delay < arr1.length; delay++) {
-      var r = arr1.reduce((sum, item, i) => sum += (item - mean1) * (arr2buf[delay + i] - mean2));
-      correlations[delay] = r * _arrEstsMul;
-    } //console.timeEnd("crosscorrelation");
-
-
-    return correlations;
-  } //Simple autocorrelation. Better method for long series: FFT[x1] .* FFT[x2]
-
-
-  static autocorrelation(arr1) {
-    var delaybuf = [...arr1, ...Array(arr1.length).fill(0)];
-    var mean1 = this.mean(arr1); //Estimators
-
-    var arr1Est = arr1.reduce((sum, item) => sum += Math.pow(item - mean1, 2));
-    arr1Est = Math.sqrt(arr1Est);
-
-    var _arr1estsqrd = 1 / (arr1Est * arr1Est);
-
-    var correlations = new Array(arr1.length).fill(0);
-
-    for (var delay = 0; delay < arr1.length; delay++) {
-      var r = arr1.reduce((sum, item, i) => sum += (item - mean1) * (delaybuf[delay + i] - mean1));
-      correlations[delay] = r * _arr1estsqrd;
-    }
-
-    return correlations;
-  } //Compute correlograms of the given array of arrays (of equal length). Input array of equal length arrays of latest raw data (use dat = eeg32instance.getTaggedRawData())
-
-
-  static correlograms(dat = [[], []]) {
-    //Coherence network math for data pushed to the atlas
-    var correlograms = []; //auto and cross correlations for each channel
-
-    dat.forEach((row1, i) => {
-      dat.forEach((row2, j) => {
-        if (j >= i) {
-          correlograms.push(Math2.crosscorrelation(row1, row2));
-        }
-      });
-    });
-    return correlograms; //Output ordered like (tag1:tag1, tag1:tag2 ... tag2:tag2, tag2:tag3 ... tagn:tagn) where autocorrelograms are also included
-  } //Input data and averaging window, output array of moving averages (should be same size as input array, initial values not fully averaged due to window)
-
-
-  static sma(arr = [], window) {
-    var smaArr = []; //console.log(arr);
-
-    for (var i = 0; i < arr.length; i++) {
-      if (i == 0) {
-        smaArr.push(arr[0]);
-      } else if (i < window) {
-        //average partial window (prevents delays on screen)
-        var arrslice = arr.slice(0, i + 1);
-        smaArr.push(arrslice.reduce((previous, current) => current += previous) / (i + 1));
-      } else {
-        //average windows
-        var arrslice = arr.slice(i - window, i);
-        smaArr.push(arrslice.reduce((previous, current) => current += previous) / window);
-      }
-    } //console.log(temp);
-
-
-    return smaArr;
-  }
-
-  static sum(arr = []) {
-    if (arr.length > 0) {
-      var sum = arr.reduce((prev, curr) => curr += prev);
-      return sum;
-    } else {
-      return 0;
-    }
-  }
-
-  static reduceArrByFactor(arr, factor = 2) {
-    //faster than interpolating
-    let x = arr.filter((element, index) => {
-      return index % factor === 0;
-    });
-    return x;
-  } //Make an array of size n from a to b 
-
-
-  static makeArr(startValue, stopValue, nSteps) {
-    var arr = [];
-    var step = (stopValue - startValue) / (nSteps - 1);
-
-    for (var i = 0; i < nSteps; i++) {
-      arr.push(startValue + step * i);
-    }
-
-    return arr;
-  } //Linear interpolation from https://stackoverflow.com/questions/26941168/javascript-interpolate-an-array-of-numbers. Input array and number of samples to fit the data to
-
-
-  static interpolateArray(data, fitCount, scalar = 1) {
-    var linearInterpolate = function (before, after, atPoint) {
-      return (before + (after - before) * atPoint) * scalar;
-    };
-
-    var newData = new Array();
-    var springFactor = new Number((data.length - 1) / (fitCount - 1));
-    newData[0] = data[0]; // for new allocation
-
-    for (var i = 1; i < fitCount - 1; i++) {
-      var tmp = i * springFactor;
-      var before = new Number(Math.floor(tmp)).toFixed();
-      var after = new Number(Math.ceil(tmp)).toFixed();
-      var atPoint = tmp - before;
-      newData[i] = linearInterpolate(data[before], data[after], atPoint);
-    }
-
-    newData[fitCount - 1] = data[data.length - 1]; // for new allocation
-
-    return newData;
-  }
-
-  static isExtrema(arr, critical = 'peak') {
-    //Checks if the middle point of the (odd-numbered) array is a local extrema. options: 'peak','valley','tangent'. Even numbered arrays are popped
-    let ref = [...arr];
-    if (ref.length % 2 === 0) ref.pop();
-
-    if (arr.length > 1) {
-      let pass = true;
-
-      for (let i = 0; i < ref.length; i++) {
-        let val = ref[i];
-
-        if (critical === 'peak') {
-          //search first derivative
-          if (i < Math.floor(ref.length * .5) && val >= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          } else if (i > Math.floor(ref.length * .5) && val >= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          }
-        } else if (critical === 'valley') {
-          //search first derivative
-          if (i < Math.floor(ref.length * .5) && val <= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          } else if (i > Math.floor(ref.length * .5) && val <= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          }
-        } else {
-          //look for tangents (best with 2nd derivative usually)
-          if (i < Math.floor(ref.length * .5) && val <= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          } else if (i > Math.floor(ref.length * .5) && val <= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          }
-        } //|| (i < ref.length*.5 && val <= 0 ) || (i > ref.length*.5 && val > 0)
-
-      }
-
-      if (critical !== 'peak' && critical !== 'valley' && pass === false) {
-        pass = true;
-
-        for (let i = 0; i < ref.length; i++) {
-          let val = ref[i];
-
-          if (i < Math.floor(ref.length * .5) && val >= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          } else if (i > Math.floor(ref.length * .5) && val >= ref[Math.floor(ref.length * .5)]) {
-            pass = false;
-            break;
-          }
-        }
-      }
-
-      return pass;
-    } else return undefined;
-  }
-
-  static isCriticalPoint(arr, critical = 'peak') {
-    //Checks if the middle point of the (odd-numbered) array is a critical point. options: 'peak','valley','tangent'. Even numbered arrays are popped
-    let ref = [...arr];
-    if (ref.length % 2 === 0) ref.pop();
-
-    if (arr.length > 1) {
-      let pass = true;
-
-      for (let i = 0; i < ref.length; i++) {
-        let val = ref[i];
-
-        if (critical === 'peak') {
-          //search first derivative
-          if (i < ref.length * .5 && val <= 0) {
-            pass = false;
-            break;
-          } else if (i > ref.length * .5 && val > 0) {
-            pass = false;
-            break;
-          }
-        } else if (critical === 'valley') {
-          //search first derivative
-          if (i < ref.length * .5 && val >= 0) {
-            pass = false;
-            break;
-          } else if (i > ref.length * .5 && val < 0) {
-            pass = false;
-            break;
-          }
-        } else {
-          //look for tangents (best with 2nd derivative usually)
-          if (i < ref.length * .5 && val >= 0) {
-            pass = false;
-            break;
-          } else if (i > ref.length * .5 && val < 0) {
-            pass = false;
-            break;
-          }
-        }
-      }
-
-      if (critical !== 'peak' && critical !== 'valley' && pass === false) {
-        pass = true;
-
-        for (let i = 0; i < ref.length; i++) {
-          let val = ref[i];
-
-          if (i < ref.length * .5 && val <= 0) {
-            pass = false;
-            break;
-          } else if (i > ref.length * .5 && val > 0) {
-            pass = false;
-            break;
-          }
-        }
-      }
-
-      return pass;
-    } else return undefined;
-  } //returns array of indices of detected peaks/valleys
-
-
-  static peakDetect = (smoothedArray, type = 'peak', window = 49) => {
-    let mid = Math.floor(window * .5);
-    let peaks = []; //console.log(smoothedArray.length-window)
-
-    for (let i = 0; i < smoothedArray.length - window; i++) {
-      let isPeak = this.isExtrema(smoothedArray.slice(i, i + window), type);
-
-      if (isPeak) {
-        peaks.push(i + mid - 1);
-      }
-    }
-
-    return peaks;
-  }; //gets a mean threshold based on peaks in an array
-
-  static getPeakThreshold(arr, peakIndices, thresholdVar) {
-    let threshold;
-    let filtered = arr.filter((o, i) => {
-      if (peakIndices.indexOf(i) > -1) return true;
-    });
-
-    if (thresholdVar === 0) {
-      threshold = this.mean(filtered);
-    } else threshold = (thresholdVar + this.mean(filtered)) * 0.5;
-
-    return threshold;
-  } //-------------------------------------------------------------
-  //The following n-dimensional Eigenvalue/PCA Math was adapted from: https://github.com/johnmihalik/eigenvector/blob/master/pca.js
-
-
-  static column(mat, x) {
-    let col = new Array(mat.length).fill(0).map(() => new Array(1).fill(0));
-
-    for (let i = 0; i < mat.length; i++) {
-      col[i][0] = mat[i][x];
-    }
-
-    return col;
-  } //flatten a vector of 1-value vectors
-
-
-  static flatten_vector(v) {
-    let v_new = [];
-
-    for (let i = 0; i < v.length; i++) {
-      v_new[i] = v[i][0];
-    }
-
-    return v_new;
-  }
-
-  static squared_difference(v1, v2) {
-    let sum = 0.0;
-
-    for (let i = 0; i < v1.length; i++) {
-      sum = sum + Math.pow(v1[i] - v2[i], 2);
-    }
-
-    return sum;
-  } // See: https://math.stackexchange.com/questions/768882/power-method-for-finding-all-eigenvectors
-
-
-  static shift_deflate(mat, eigenvalue, eigenvector) {
-    let len = Math.sqrt(this.matmul(this.transpose(eigenvector), eigenvector));
-    let U = this.matscale(eigenvector, 1.0 / len);
-    let delta = this.matscale(this.matmul(U, this.transpose(U)), eigenvalue);
-    let M_new = this.matsub(mat, delta);
-    return M_new;
-  }
-
-  static eigenvalue_of_vector(mat, eigenvector) {
-    // Xt * M * x
-    ev = this.matmul(this.matmul(this.transpose(eigenvector), mat), eigenvector);
-    return ev;
-  } //Input square 2D matrix
-
-
-  static power_iteration(mat, tolerance = 0.00001, max_iterations = 1000) {
-    let rank = mat.length; // Initialize the first guess pf the eigenvector to a row vector of the sqrt of the rank
-
-    let eigenvector = new Array(rank).fill(0).map(() => new Array(1).fill(Math.sqrt(rank))); // Compute the corresponding eigenvalue
-
-    let eigenvalue = this.eigenvalue_of_vector(mat, eigenvector);
-    let epsilon = 1.0;
-    let iter = 0;
-
-    while (epsilon > tolerance && iter < max_iterations) {
-      let old_eigenvalue = JSON.parse(JSON.stringify(eigenvalue)); // Multiply the Matrix M by the guessed eigenveector
-
-      let Mv = this.matmul(mat, eigenvector); // Normalize the eigenvector to unit length
-
-      eigenvector = this.normalize(Mv); // Calculate the associated eigenvalue with the eigenvector (transpose(v) * M * v)
-
-      eigenvalue = this.eigenvalue_of_vector(mat, eigenvector); // Calculate the epsilon of the differences
-
-      epsilon = Math.abs(eigenvalue - old_eigenvalue);
-      iter++;
-    }
-
-    ;
-    return [eigenvalue, eigenvector];
-  } //Input square 2D matrix
-
-
-  static eigens(mat, tolerance = 0.0001, max_iterations = 1000) {
-    let eigenvalues = [];
-    let eigenvectors = [];
-
-    for (let i = 0; i < mat.length; i++) {
-      // Compute the remaining most prominent eigenvector of the matrix M
-      let result = this.power_iteration(mat, tolerance, max_iterations); // Separate the eigenvalue and vector from the return array
-
-      let eigenvalue = result[0];
-      let eigenvector = result[1];
-      eigenvalues[i] = eigenvalue;
-      eigenvectors[i] = this.flatten_vector(eigenvector); // Now remove or peel off the last eigenvector
-
-      mat = this.shift_deflate(mat, eigenvalue, eigenvector);
-    }
-
-    return [eigenvalues, eigenvectors];
-  } //Input square 2D matrix. For eeg data you input a square covariance matrix of the signal data (or the z-scores of the signal data)
-
-
-  static pca(mat, tolerance = 0.00001) {
-    let dims = mat.length;
-    let t = new Array(dims);
-    let p = new Array(dims);
-    let mat_t = this.transpose(mat);
-    t[0] = this.column(mat, 0);
-    let epsilon = 1.0;
-    let iter = 0;
-
-    while (espilon > tolerance) {
-      iter++;
-      p[0] = this.matmul(mat_t, t[0]);
-      let tp = this.matmul(this.transpose(t[0]), t[0]);
-      p[0] = this.matscale(p[0], 1.0 / tp); // Normalize p
-
-      let p_length = Math.sqrt(this.matmul(this.transpose(p[0]), p[0]));
-      p[0] = this.matscale(p[0], 1.0 / p_length);
-      let t_new = this.matmul(mat, p[0]);
-      let pp = this.matmul(this.transpose(p[0]), p[0]);
-      t_new = this.matscale(t_new, 1.0 / pp);
-      epsilon = this.squared_difference(t[0], t_new);
-      t[0] = JSON.parse(JSON.stringify(t_new));
-    }
-
-    let components = this.matmul(this.transpose(t[0]), t[0]);
-    return components;
-  } //-------------------------------------------------------------
-  //pass in 1 second of raw data ish recommended, desired event timestamps and signals are ordered from least current to most current 
-
-
-  static p300(event_timestamps = [], raw_signal = [], signal_timestamps = [], sps = 256) {
-    let smoothingstep = Math.floor(sps / 10); //300ms width peak, 1/10th sec smoothing for filtering
-
-    let smoothed = this.sma(raw_signal, smoothingstep);
-    let peaks = this.peakDetect(smoothed, 'peak', smoothingstep); //returns indices of peaks
-
-    let mean = this.mean(smoothed);
-    let std = this.std(smoothed, mean);
-    let p_idx = 0;
-    let candidates = [];
-
-    if (peaks.length > 0) {
-      event_timestamps.forEach((t, j) => {
-        while (signal_timestamps[peaks[p_idx]] < t + 200) {
-          //roll over peaks that are behind of the latest event + 200ms
-          p_idx++;
-          if (!peaks[p_idx]) break;
-        }
-
-        let tempi = 0;
-        let tempcandidates = [];
-
-        while (signal_timestamps[peaks[p_idx + tempi]] < t + 600) {
-          //get peaks that are behind the latest event + (200ms-600ms)
-          tempcandidates.push(p_idx + tempi);
-          tempi++;
-          if (!peaks[p_idx + tempi]) break;
-        }
-
-        if (tempcandidates.length > 1) {
-          //if multiple peaks found choose the biggest one for the main p300 peak (not worrying about p1,p2,n1,n2 yet)
-          let peakvals = [];
-          tempcandidates.forEach(tc => {
-            peakvals.push(smoothed[peaks[tc]]);
-          });
-          let max = Math.max(...peakvals);
-          let maxi = tempcandidates[peakvals.indexOf(max)];
-          candidates.push({
-            event_timestamp: t,
-            event_index: j,
-            peak_timestamp: signal_timestamps[[peaks[maxi]]],
-            signal_index: [peaks[maxi]],
-            signal_amplitude: raw_signal[[peaks[maxi]]],
-            zscore: (smoothed[peaks[maxi]] - mean) / std //significance measure
-
-          });
-        } else if (tempcandidates.length === 1) candidates.push({
-          event_timestamp: t,
-          event_index: j,
-          peak_timestamp: signal_timestamps[peaks[tempcandidates[0]]],
-          signal_index: peaks[tempcandidates[0]],
-          signal_amplitude: raw_signal[[peaks[tempcandidates[0]]]],
-          zscore: (smoothed[peaks[tempcandidates[0]]] - mean) / std //significance measure
-
+  addCallbacks(callbacks = this.callbacks) {
+    callbacks.forEach(fn => {
+      this.callbackManager.addCallback(fn.case, fn.callback);
+
+      if (fn.aliases) {
+        fn.aliases.forEach(c => {
+          this.callbackManager.addCallback(c, fn.callback);
         });
-      });
-    }
-
-    return candidates;
+      }
+    });
   }
 
 }
 
 /***/ }),
 
-/***/ 539:
+/***/ 521:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LG": () => (/* binding */ ProxyManager)
+/* harmony export */   "Y": () => (/* binding */ CallbackManager)
 /* harmony export */ });
-/* unused harmony exports EventDispatcher, ElementProxyReceiver */
+/* harmony import */ var _utils_Event_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(182);
+/* harmony import */ var _utils_Parsing_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(872);
+/* harmony import */ var _workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(639);
+/* harmony import */ var _workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(702);
+/* harmony import */ var _workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(315);
+
+ //just comment these out if you don't want them
+
+
+
+
+class CallbackManager {
+  canvas;
+  ctx;
+  context;
+
+  constructor() {
+    this.EVENTS = new _utils_Event_js__WEBPACK_IMPORTED_MODULE_0__/* .Events */ .z();
+    this.EVENTSETTINGS = [];
+    this.ID = Math.floor(Math.random() * 1000); //just a reference for discerning threads 
+    //args = array of expected arguments
+    //origin = optional tag on input object
+    //self = this. scope for variables within the callbackmanager (including values set)
+
+    let defaultFunctions = [{
+      //ping pong, just validates responsiveness
+      case: 'ping',
+      callback: (self, args, origin) => {
+        return 'pong';
+      }
+    }, {
+      //return a list of function calls available on the worker
+      case: 'list',
+      callback: (self, args, origin) => {
+        let list = [];
+        this.callbacks.forEach((callback, name) => {
+          list.push(name);
+        });
+        return list;
+      }
+    }, {
+      //add a local function, can implement whole algorithm pipelines on-the-fly
+      case: 'addfunc',
+      callback: (self, args, origin) => {
+        //arg0 = name, arg1 = function string (arrow or normal)
+        if (!args[0] || !args[1]) return false;
+        let newFunc = (0,_utils_Parsing_js__WEBPACK_IMPORTED_MODULE_1__/* .parseFunctionFromText */ .Nc)(args[1]);
+
+        if (args[2] === true) {
+          //adds try-catch safety
+          let safeFunc = async (self, args, origin) => {
+            try {
+              let result = await newFunc(self, args, origin);
+              return result;
+            } catch (err) {
+              console.error(err);
+            }
+          };
+
+          self.callbacks.set(args[0], safeFunc);
+        } else self.callbacks.set(args[0], newFunc);
+
+        return true;
+      }
+    }, {
+      case: 'removefunc',
+      callback: (self, args, origin) => {
+        if (args[0]) return this.removeCallback(args[0]);else return undefined;
+      }
+    }, {
+      //set locally accessible values, just make sure not to overwrite the defaults in the callbackManager
+      case: 'setValues',
+      callback: (self, args, origin) => {
+        if (typeof args === 'object') {
+          Object.keys(args).forEach(key => {
+            self[key] = args[key]; //variables will be accessible in functions as this.x or this['x']
+
+            if (self.threeUtil) self.threeUtil[key] = args[key];
+          });
+          return true;
+        } else return false;
+      }
+    }, {
+      //append array values
+      case: 'appendValues',
+      callback: (self, args, origin) => {
+        if (typeof args === 'object') {
+          Object.keys(args).forEach(key => {
+            if (!self[key]) self[key] = args[key];else if (Array.isArray(args[key])) self[key].push(args[key]); //variables will be accessible in functions as this.x or this['x']
+            else self[key] = args[key];
+          });
+          return true;
+        } else return false;
+      }
+    }, {
+      //for use with transfers
+      case: 'setValuesFromArrayBuffers',
+      callback: (self, args, origin) => {
+        if (typeof args === 'object') {
+          Object.keys(args).forEach(key => {
+            if (args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key] = Array.from(args[key]);else self[key] = args[key];
+          });
+          return true;
+        } else return false;
+      }
+    }, {
+      //for use with transfers
+      case: 'appendValuesFromArrayBuffers',
+      callback: (self, args, origin) => {
+        if (typeof args === 'object') {
+          Object.keys(args).forEach(key => {
+            if (!self[key] && args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key] = Array.from(args[key]);else if (!self[key]) self[key] = args[key];else if (args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key].push(Array.from(args[key]));else if (Array.isArray(args[key])) self[key].push(args[key]); //variables will be accessible in functions as this.x or this['x']
+            else self[key] = args[key];
+          });
+          return true;
+        } else return false;
+      }
+    }, {
+      //parses a stringified class prototype (class x{}.toString()) containing function methods for use on the worker
+      case: 'transferClassObject',
+      callback: (self, args, origin) => {
+        if (typeof args === 'object') {
+          Object.keys(args).forEach(key => {
+            if (typeof args[key] === 'string') {
+              let obj = args[key];
+              if (args[key].indexOf('class') === 0) obj = eval('(' + args[key] + ')');
+              self[key] = obj; //variables will be accessible in functions as this.x or this['x'] / self.x or self['x']
+              //console.log(self,key,obj);
+
+              if (self.threeUtil) self.threeUtil[key] = obj;
+            }
+          });
+          return true;
+        } else return false;
+      }
+    }, {
+      //MessageChannel port, it just runs the whole callback system to keep it pain-free, while allowing messages from other workers
+      case: 'addport',
+      callback: (self, args, origin) => {
+        //args[0] = eventName, args[1] = case, only fires event if from specific same origin
+        let port = args[1];
+        port.onmessage = onmessage; //sets up a new receiver source (from other workers, perform addevent on the other worker)
+
+        this[args[0]] = port; //locally 
+      }
+    }, {
+      //add an event to the event manager, this helps building automated pipelines between threads
+      case: 'addevent',
+      callback: (self, args, origin) => {
+        //args[0] = eventName, args[1] = case, only fires event if from specific same origin
+        self.EVENTSETTINGS.push({
+          eventName: args[0],
+          case: args[1],
+          port: args[2],
+          origin: origin
+        }); //console.log(args);
+
+        if (args[2]) {
+          let port = args[2];
+          port.onmessage = onmessage; //attach the port onmessage event
+
+          this[args[0] + 'port'] = port;
+        }
+
+        return true;
+      }
+    }, {
+      //internal event subscription, look at Event.js for usage, its essentially a function trigger manager for creating algorithms
+      case: 'subevent',
+      callback: (self, args, origin) => {
+        //args[0] = eventName, args[1] = response function(self,args,origin) -> lets you reference self for setting variables
+        if (typeof args[0] !== 'string') return false;
+        let response = (0,_utils_Parsing_js__WEBPACK_IMPORTED_MODULE_1__/* .parseFunctionFromText */ .Nc)(args[1]);
+        let eventSetting = this.checkEvents(args[0]); //this will contain the port setting if there is any
+        //console.log(args, eventSetting)
+
+        return self.EVENTS.subEvent(args[0], output => {
+          response(self, output, origin, eventSetting?.port, eventSetting?.eventName); //function wrapper so you can access self from the event subscription
+        });
+      }
+    }, {
+      //internal event unsubscribe
+      case: 'unsubevent',
+      callback: (self, args, origin) => {
+        //args[0] = eventName, args[1] = case, only fires event if from specific same origin
+        return self.EVENTS.unsubEvent(args[0], args[1]);
+      }
+    }];
+    this.callbacks = new Map();
+    defaultFunctions.forEach(o => {
+      if (o.case) this.callbacks.set(o.case, o.callback);
+      if (o.aliases) o.aliases.forEach(alias => this.callbacks.set(alias, o.callback));
+    });
+
+    try {
+      if (_workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__/* .workerCPU */ .h) {
+        this.workerCPU = new _workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__/* .workerCPU */ .h(this);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    try {
+      if (_workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__/* .workerGPU */ .a) {
+        this.workerGPU = new _workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__/* .workerGPU */ .a(this);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    try {
+      if (_workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__/* .workerRenderer */ .r) {
+        this.workerRenderer = new _workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__/* .workerRenderer */ .r(this);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  addCallback = (functionName, callback = (self, args, origin) => {}) => {
+    if (!functionName || !callback) return false; //this.removeCallback(functionName); //removes existing callback if it is there
+
+    this.callbacks.set(functionName, callback);
+    return true;
+  };
+  removeCallback = functionName => {
+    let found = this.callbacks.get(functionName);
+
+    if (found) {
+      this.callbacks.delete(functionName);
+      return true;
+    }
+
+    return false;
+  };
+  runCallback = async (functionName, args = [], origin) => {
+    let output = undefined;
+    let callback = this.callbacks.get(functionName);
+
+    if (callback) {
+      output = await callback(this, args, origin);
+    }
+
+    return output;
+  };
+  checkEvents = (functionName, origin) => {
+    let found = this.EVENTSETTINGS.find(o => {
+      if (o.origin && origin && o.case && functionName) {
+        if (o.origin === origin && o.case === functionName) return true;else return false;
+      } else if (o.case && functionName) {
+        if (o.case === functionName) return true;else return false;
+      } else if (o.origin && origin) {
+        if (o.origin === origin) return true;else return false;
+      } else return false;
+    }); //console.log(functionName,origin,found)
+
+    return found;
+  };
+  checkCallbacks = async event => {
+    //console.log(event);
+    let output = undefined;
+    if (!event.data) return output;
+    let callback; //different function name properties just for different sensibilities
+
+    if (event.data.case) callback = this.callbacks.get(event.data.case);else if (event.data.foo) callback = this.callbacks.get(event.data.foo);else if (event.data.command) callback = this.callbacks.get(event.data.command);else if (event.data.cmd) callback = this.callbacks.get(event.data.cmd);
+
+    if (callback) {
+      if (event.data.input) output = await callback(this, event.data.input, event.data.origin);else if (event.data.args) output = await callback(this, event.data.args, event.data.origin);else output = await callback(this, undefined, event.data.origin); //no inputs
+    }
+
+    return output;
+  };
+}
+
+/***/ }),
+
+/***/ 702:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "a": () => (/* binding */ workerGPU)
+});
+
+// EXTERNAL MODULE: ./node_modules/gpujsutils/src/gpu-browser.min.js
+var gpu_browser_min = __webpack_require__(759);
+;// CONCATENATED MODULE: ./node_modules/gpujsutils/src/gpuUtils-functs.js
+//By Joshua Brewster, Dovydas Stirpeika (AGPL v3.0 License)
+//------------------------------------
+//---------GPU Utility Funcs---------- (gpu.addFunction())
+//------------------------------------
+
+
+function add(a, b) { return a + b; }
+function sub(a, b) { return a - b; }
+function mul(a, b) { return a * b; }
+function div(a, b) { return a / b; }
+
+function cadd(a_real, a_imag, b_real, b_imag) {
+    return [a_real + b_real, a_imag + b_imag];
+}
+
+function csub(a_real, a_imag, b_real, b_imag) {
+    return [a_real - b_real, a_imag - b_imag];
+}
+
+function cmul(a_real, a_imag, b_real, b_imag) {
+    return [a_real*b_real - a_imag*b_imag, a_real*b_imag + a_imag*b_real];
+}
+
+function cexp(a_real, a_imag) {
+    const er = Math.exp(a_real);
+    return [er * Math.cos(a_imag), er * Math.sin(a_imag)];
+}
+
+function mag(a, b) { // Returns magnitude
+    return Math.sqrt(a*a + b*b);
+}
+
+function conj(imag) { //Complex conjugate of x + iy is x - iy
+    return 0 - imag;
+}
+
+function lof(n) { //Lowest odd factor
+    const sqrt_n = Math.sqrt(n);
+    var factor = 3;
+
+    while(factor <= sqrt_n) {
+        if (n % factor === 0) return factor;
+        factor += 2;
+    }
+}
+
+function mean(arr, len) {
+    var mean = 0;
+    for (var i = 0; i < len; i++) {
+        mean += arr[i];
+    }
+    return mean/len;
+}
+
+function est(arr, mean, len) {
+    var est = 0;
+    for (var i=0; i<len;i++){
+        est += (arr[i]-mean)*(arr[i]-mean);
+    }
+    return Math.sqrt(est);
+}
+
+function mse(arr, mean, len) { //mean squared error
+    var est = 0;
+    var vari = 0;
+    for (var i = 0; i < len; i++) {
+        vari = arr[i]-mean;
+        est += vari*vari;
+    }
+    return est/len;
+}
+
+function rms(arr, mean, len) { //root mean square error
+    var est = 0;
+    var vari = 0;
+    for (var i = 0; i < len; i++) {
+        vari = arr[i]-mean;
+        est += vari*vari;
+    }
+    return Math.sqrt(est/len);
+}
+
+function xcor(arr1, arr1mean, arr1Est, arr2, arr2mean, arr2Est, len, delay) { //performs a single pass of a cross correlation equation, see correlogramsKern
+    var correlation = 0;
+    for (var i = 0; i < len; i++)  {
+        var j = i+delay;
+        var k = 0;
+        if(j < len) { k = arr2[j]; }
+        correlation += (arr1[i]-arr1mean)*(k-arr2mean);
+    }
+    return correlation/(arr1Est*arr2Est);
+}
+
+function softmax(array, len, i) { // Returns a single array value for a 1d softmax function.
+    var esum = 0;
+    for(var j = 0; j < len; j++){
+        esum+= Math.exp(array[j]);
+    }
+    return Math.exp(array[i])/esum;
+}
+
+function DFT(signal, len, freq){ //Extract a particular frequency
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+
+    for(var i = 0; i<len; i++){
+      var sharedi = shared*i; //this.thread.x is the target frequency
+      real = real+signal[i]*Math.cos(sharedi);
+      imag = imag-signal[i]*Math.sin(sharedi);
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real*_len,imag*_len]; //mag(real,imag)
+}
+
+function DFTlist(signals, len, freq, n) { //Extract a particular frequency
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+    for(var i = 0; i<len; i++){
+      var sharedi = shared*i; //this.thread.x is the target frequency
+      real = real+signals[i+(len-1)*n]*Math.cos(sharedi);
+      imag = imag-signals[i+(len-1)*n]*Math.sin(sharedi);  
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real*_len,imag*_len]; //mag(real,imag)
+}
+
+//FFT, simply implements a nyquist frequency based index skip for frequencies <= sampleRate*.25.
+//Other optimization: could do 4 loops per thread and return a vec4, this is what you see in some other ultrafast libs
+function FFT(signal, len, freq, sr){ //Extract a particular frequency
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+
+    var skip = 1;
+    var N = 0;
+    var factor = sr*.25;
+    if(freq <= factor){
+        while(freq <= factor){
+            factor=factor*.5;
+            skip+=1;
+        }
+    }
+
+    for(var i = 0; i<len; i+=skip){
+      var j = i;
+      if(j > len) { j = len; }
+      var sharedi = shared*j; //this.thread.x is the target frequency
+      real = real+signal[j]*Math.cos(sharedi);
+      imag = imag-signal[j]*Math.sin(sharedi);
+      N += 1;
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real/N,imag/N]; //mag(real,imag)
+}
+
+function FFTlist(signals, len, freq, n, sr) { //Extract a particular frequency from a 1D list of equal sized signal arrays. Uses less samples for lower frequencies closer to nyquist threshold
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+
+    var skip = 1;
+    var N = 0;
+    var factor = sr*.25;
+    if(freq <= factor){
+        while(freq <= factor){
+            factor=factor*.5;
+            skip+=1;
+        }
+    }
+
+    for(var i = 0; i<len; i+=skip){
+        var j = i;
+      if(j > len) { j = len; }
+      var sharedi = shared*j; //this.thread.x is the target frequency
+      real = real+signals[j+(len-1)*n]*Math.cos(sharedi);
+      imag = imag-signals[j+(len-1)*n]*Math.sin(sharedi);
+      N += 1;  
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real/N,imag/N]; //mag(real,imag)
+}
+
+//Conjugated real and imaginary parts for iDFT (need to test still)
+function iDFT(fft, len, freq){ //inverse DFT to return time domain
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+
+    for(var i = 0; i<len; i++){
+      var sharedi = shared*i; //this.thread.x is the target frequency
+      real = real+fft[i]*Math.cos(sharedi);
+      imag = fft[i]*Math.sin(sharedi)-imag;  
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real*_len,imag*_len]; //mag(real,imag)
+}
+
+function iDFTlist(fft,len,freq,n){ //inverse DFT to return time domain 
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len
+    for (var i = 0; i<len; i++) {
+      var sharedi = shared*i; //this.thread.x is the target frequency
+      real = real+fft[i+(len-1)*n]*Math.cos(sharedi);
+      imag = fft[i+(len-1)*n]*Math.sin(sharedi)-imag;  
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real*_len,imag*_len]; //mag(real,imag)
+}
+
+function iFFT(fft, len, freq, sr){ //inverse FFT to return time domain
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+
+    var skip = 1;
+    var N = 0;
+    var factor = sr*.25;
+    if(freq <= factor){
+        while(freq <= factor){
+            factor=factor*.5;
+            skip+=1;
+        }
+    }
+
+    for(var i = 0; i<len; i+=skip){
+      var j = i;
+      if(j > len) { j = len; }
+      var sharedi = shared*j; //this.thread.x is the target frequency
+      real = real+fft[j]*Math.cos(sharedi);
+      imag = fft[j]*Math.sin(sharedi)-imag;  
+      N += 1;
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real/N,imag/N]; //mag(real,imag)
+}
+
+function iFFTlist(signals, len, freq, n, sr) { //Extract a particular frequency from a 1D list of equal sized signal arrays. Uses less samples for lower frequencies closer to nyquist threshold
+    var real = 0;
+    var imag = 0;
+    var _len = 1/len;
+    var shared = 6.28318530718*freq*_len;
+
+    var skip = 1;
+    var N = 0;
+    var factor = sr*.25;
+    if(freq <= factor){
+        while(freq <= factor){
+            factor=factor*.5;
+            skip+=1;
+        }
+    }
+
+    for(var i = 0; i<len; i+=skip){
+        var j = i;
+      if(j > len) { j = len; }
+      var sharedi = shared*j; //this.thread.x is the target frequency
+      real = real+signals[j+(len-1)*n]*Math.cos(sharedi);
+      imag = signals[j+(len-1)*n]*Math.sin(sharedi)-imag;
+      N += 1;  
+    }
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return [real/N,imag/N]; //mag(real,imag)
+}
+
+
+
+
+
+
+
+//------------------------------------
+//---------Kernel functions----------- (gpu.createKernel(func))
+//------------------------------------
+
+
+function correlogramsKern(arrays, len) { //Computes cross correlations of each pair of arrays given to the function. so xcor[0,1],xcor[2,3],etc
+
+    var k = Math.floor(this.thread.x/len)*2;
+    var delay = this.thread.x - Math.floor(this.thread.x/len)*len;
+    var arr1mean = mean(arrays[k],len);
+    var arr2mean = mean(arrays[k+1],len);
+    var arr1Est = est(arrays[k],arr1mean,len);
+    var arr2Est = est(arrays[k+1],arr2mean,len);
+
+    var y_x = xcor(arrays[k],arr1mean,arr1Est,arrays[k+1],arr2mean,arr2Est,len,delay);
+
+    return y_x;
+}
+
+//Computes cross correlations of each pair of arrays given to the function. so xcor[0,1],xcor[2,3],etc
+//Takes precomputed averages and estimators for each array for efficiency
+function correlogramsPCKern(arrays, len, means, estimators) { 
+    var k = Math.floor(this.thread.x/len)*2;
+    var delay = this.thread.x - Math.floor(this.thread.x/len)*len;
+    var arr1mean = means[k];
+    var arr2mean = means[k+1];
+    var arr1Est = estimators[k];
+    var arr2Est = estimators[k+1];
+
+    var y_x = xcor(arrays[k],arr1mean,arr1Est,arrays[k+1],arr2mean,arr2Est,len,delay);
+
+    return y_x;
+}
+
+
+//Return frequency domain based on DFT
+function dftKern(signal, len, scalar) {
+    var result = DFT(signal,len, this.thread.x);
+    return mag(result[0], result[1])*scalar;
+}
+
+function idftKern(amplitudes, len, scalar) {
+    var result = iDFT(amplitudes, len, this.thread.x);
+    return mag(result[0], result[1])*scalar;
+}
+
+function fftKern(signal, len, scalar, sampleRate) {
+    var result = FFT(signal,len, this.thread.x, sampleRate);
+    return mag(result[0], result[1])*scalar;
+}
+
+function ifftKern(amplitudes, len, scalar, sampleRate) {
+    var result = iFFT(amplitudes, len, this.thread.x, sampleRate);
+    return mag(result[0], result[1])*scalar;
+}
+
+// Takes a 2D array input [signal1[],signal2[],signal3[]]; does not work atm
+function listdft2DKern(signals, scalar) {
+    var len = this.output.x;
+    var result = DFT(signals[this.thread.y],len,this.thread.x);
+    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
+    return mag(result[0],result[1])*scalar; //mag(real,imag)
+}
+
+// [[signals1][signals2]]
+
+// More like a vertex buffer list to chunk through lists of signals
+function listdft1DKern(signals, len, scalar) {
+    var result = [0, 0];
+    if (this.thread.x <= len) {
+      result = DFT(signals,len,this.thread.x);
+    } else {
+      var n = Math.floor(this.thread.x/len);
+      result = DFTlist(signals,len,this.thread.x-n*len,n);
+    }
+
+    return mag(result[0],result[1])*scalar;
+} // [signals1,signasl2]
+
+// More like a vertex buffer list to chunk through lists of signals
+function listfft1DKern(signals, len, scalar, sps) {
+    var result = [0, 0];
+    if (this.thread.x <= len) {
+      result = FFT(signals,len,this.thread.x,sps);
+    } else {
+      var n = Math.floor(this.thread.x/len);
+      result = FFTlist(signals,len,this.thread.x-n*len,n,sps);
+    }
+
+    return mag(result[0],result[1])*scalar;
+} // [signals1,signasl2]
+
+function dft_windowedKern(signal, sampleRate, freqStart, freqEnd, scalar) {
+    var result = [0,0];
+    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+    result = DFT(signal,sampleRate,freq);
+
+    return mag(result[0],result[1])*scalar;
+} 
+
+
+//windowed functions should use a 1 second window for these hacky DFTs/FFTs to work right.
+
+function fft_windowedKern(signal, sampleRate, freqStart, freqEnd, scalar) {
+    var result = [0,0];
+    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+    result = FFT(signal,sampleRate,freq);
+
+    return mag(result[0],result[1])*scalar;
+}
+
+function idft_windowedKern(amplitudes, sampleRate, freqStart, freqEnd, scalar) {
+    var result = [0,0];
+    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+    result = iDFT(amplitudes,sampleRate,freq);
+
+    return mag(result[0],result[1])*scalar;
+}
+
+function ifft_windowedKern(amplitudes, sampleRate, freqStart, freqEnd, scalar) {
+    var result = [0,0];
+    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+    result = iFFT(amplitudes,sampleRate,freq);
+
+    return mag(result[0],result[1])*scalar;
+}
+
+function listdft1D_windowedKern(signals, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
+    var result = [0, 0];
+    if (this.thread.x < sampleRate) {
+      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+      result = DFT(signals,sampleRate,freq);
+    } else {
+      var n = Math.floor(this.thread.x/sampleRate);
+      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
+      result = DFTlist(signals,sampleRate,freq-n*sampleRate,n);
+    }
+    //var mags = mag(result[0],result[1]);
+
+    return mag(result[0],result[1])*scalar; 
+}
+
+function listfft1D_windowedKern(signals, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
+    var result = [0, 0];
+    if (this.thread.x < sampleRate) {
+      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+      result = FFT(signals,sampleRate,freq,sampleRate);
+    } else {
+      var n = Math.floor(this.thread.x/sampleRate);
+      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
+      result = FFTlist(signals,sampleRate,freq-n*sampleRate,n,sampleRate);
+    }
+    //var mags = mag(result[0],result[1]);
+
+    return mag(result[0],result[1])*scalar; 
+}
+
+function listidft1D_windowedKern(ffts, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
+    var result = [0, 0];
+    if (this.thread.x < sampleRate) {
+      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+      result = iDFT(ffts,sampleRate,freq);
+    } else {
+      var n = Math.floor(this.thread.x/sampleRate);
+      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
+      result = iDFTlist(ffts,sampleRate,freq-n*sampleRate,n);
+    }
+    //var mags = mag(result[0],result[1]);
+
+    return mag(result[0]*2,result[1]*2)*scalar; //Multiply result by 2 since we are only getting the positive results and want to estimate the actual amplitudes (positive = half power, reflected in the negative axis)
+}
+
+function listifft1D_windowedKern(ffts, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
+    var result = [0, 0];
+    if (this.thread.x < sampleRate) {
+      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
+      result = iFFT(ffts,sampleRate,freq);
+    } else {
+      var n = Math.floor(this.thread.x/sampleRate);
+      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
+      result = iFFTlist(ffts,sampleRate,freq-n*sampleRate,n);
+    }
+    //var mags = mag(result[0],result[1]);
+
+    return mag(result[0]*2,result[1]*2)*scalar; //Multiply result by 2 since we are only getting the positive results and want to estimate the actual amplitudes (positive = half power, reflected in the negative axis)
+}
+
+//e.g. arrays = [[arr1],[arr2],[arr3],[arr4],[arr5],[arr6]], len = 10, n = 2, scalar=1... return results of [arr1*arr2], [arr3*arr4], [arr5*arr6] as one long array that needs to be split
+function bulkArrayMulKern(arrays, len, n, scalar) {
+    var i = n*Math.floor(this.thread.x/len); //Jump forward in array buffer
+    var product = arrays[i][this.thread.x];
+    for (var j = 0; j < n; j++) {
+      product *= arrays[j][this.thread.x];
+    }
+    return product*scalar;
+}
+
+function ImgConv2DKern(img, width, height, kernel, kernelLength) {
+    let kernelRadius = (Math.sqrt(kernelLength) - 1) / 2;
+    const kSize = 2 * kernelRadius + 1;
+    let r = 0, g = 0, b = 0;
+
+    let i = -kernelRadius;
+    let kernelOffset = 0;
+    while (i <= kernelRadius) {
+        if (this.thread.x + i < 0 || this.thread.x + i >= width) {
+            i++;
+            continue;
+        }
+
+        let j = -kernelRadius;
+        while (j <= kernelRadius) {
+            if (this.thread.y + j < 0 || this.thread.y + j >= height) {
+                j++;
+                continue;
+            }
+
+            kernelOffset = (j + kernelRadius) * kSize + i + kernelRadius;
+            const weights = kernel[kernelOffset];
+            const pixel = img[this.thread.y + i][this.thread.x + j];
+            r += pixel.r * weights;
+            g += pixel.g * weights;
+            b += pixel.b * weights;
+            j++;
+        }
+        i++;
+    }
+
+    this.color(r, g, b);
+}
+
+function multiImgConv2DKern(img, width, height, kernels, kernelLengths, nKernels) {
+    
+    let r = 0, g = 0, b = 0;
+    for(var i = 0; i < nKernels; i++){
+
+        let kernelLength = kernelLengths[i];            
+        let kernelRadius = (Math.sqrt(kernelLength) - 1) / 2;
+        //(src, width, height, kernel, kernelRadius)
+        const kSize = 2 * kernelRadius + 1;
+        
+        let k = -kernelRadius;
+        let kernelOffset = 0;
+        while (k <= kernelRadius) {
+            if (this.thread.x + k < 0 || this.thread.x + k >= width) {
+                k++;
+                continue;
+            }
+
+            let j = -kernelRadius;
+            while (j <= kernelRadius) {
+                if (this.thread.y + j < 0 || this.thread.y + j >= height) {
+                j++;
+                continue;
+                }
+
+                kernelOffset = (j + kernelRadius) * kSize + k + kernelRadius;
+                const weights = kernels[i][kernelOffset];
+                const pixel = img[this.thread.y + k][this.thread.x + j];
+    
+                r += pixel.r * weights;
+                g += pixel.g * weights;
+                b += pixel.b * weights;
+            
+                //img[this.thread.y + k][this.thread.x + j] = pixel;      
+                    
+                j++;
+            }
+            k++;
+        }
+    }
+    this.color(r,g,b);
+}
+
+function transpose2DKern(mat2) { //Transpose a 2D matrix, meant to be combined
+    return mat2[this.thread.y][this.thread.x];
+}
+
+
+//function deferredPass(vPos, vNorm, vAlbedo, vDepth, vSpec) {  } //project geometry, light geometry
+
+/*
+Scene drawing:
+(With depth testing enabled)
+1. Project object local spaces to world space based on geometry and world coordinates
+1.5 do some occlusion culling for which texture data to send to the gpu, requires last camera matrix
+2. Now send to lighting pass, with coloring properties defined by different texture maps. 
+3. Project result to camera space based on camera position and aperture.
+4. Draw result
+*/
+
+
+//Note on pixel operations in gpujs: create kernel with setGraphical(true), render() to offscreencanvas, get render.getPixels() on each frame for pixel values which can be stored math operations
+
+
+//Exports
+
+const createGpuKernels = {
+    correlogramsKern, correlogramsPCKern, dftKern, idftKern, fftKern, ifftKern,
+    dft_windowedKern, idft_windowedKern, fft_windowedKern, ifft_windowedKern, 
+    listdft2DKern, listdft1DKern, listfft1DKern, listfft1D_windowedKern, listdft1D_windowedKern, listidft1D_windowedKern, listifft1D_windowedKern,
+    bulkArrayMulKern, fftKern, ifftKern, multiImgConv2DKern,
+    ImgConv2DKern, transpose2DKern
+}
+
+const addGpuFunctions = [
+    add, sub, mul, div, cadd, csub,
+    cmul, cexp, mag, conj, lof, mean, est,
+    mse, rms, xcor, softmax, DFT, DFTlist,
+    iDFT, iDFTlist, FFT, iFFT, iFFTlist
+];
+;// CONCATENATED MODULE: ./node_modules/gpujsutils/src/gpuUtils.js
+ // becomes a window variable
+
+
+//By Joshua Brewster, Dovydas Stirpeika (AGPL v3.0 License)
+
+function makeKrnl(gpu, f, opts = {
+  setDynamicOutput: true,
+  setDynamicArguments: true,
+  setPipeline: true,
+  setImmutable: true,
+  setGraphical: false
+}) {
+
+  const k = gpu.createKernel(f);
+
+  if (opts.setDynamicOutput)    k.setDynamicOutput(true);
+  if (opts.output)              k.setOutput(opts.output);
+  if (opts.setDynamicArguments) k.setDynamicArguments(true);
+  if (opts.setPipeline)         k.setPipeline(true);
+  if (opts.setImmutable)        k.setImmutable(true);
+  if (opts.setGraphical)        k.setGraphical(true);
+
+  //.setOutput([signal.length]) //Call before running the kernel
+  //.setLoopMaxIterations(signal.length);
+
+  return k;
+}
+
+function makeCanvasKrnl(gpu, f, opts = {
+  output: [300,300],
+  setDynamicArguments: true,
+  setDynamicOutput: true,
+  setPipeline: false,
+  setImmutable: true,
+  setGraphical: true
+}, divId) {
+
+  const k = makeKrnl(gpu,f,opts);
+
+  //k();
+
+  const canvas = k.canvas; 
+
+  if (typeof divId === 'string') document.getElementById(toAppend).appendChild(canvas);
+  else if(divId) toAppend.appendChild(canvas);
+  else document.body.appendChild(canvas);
+
+  return k; //run k() with the input arguments in an animation loop, get graphical output.
+}
+
+class gpuUtils {
+  
+  constructor(gpu = new GPU()) {
+    this.gpu = gpu;
+    this.kernels = new Map(); // {name:"",f:foo(){}}
+
+    this.kernel;
+    this.PI = 3.141592653589793;
+    this.SQRT1_2 = 0.7071067811865476
+
+    this.addFunctions();
+
+    this.imgkernels = {
+      edgeDetection: [
+        -1, -1, -1,
+        -1,  8, -1,
+        -1, -1, -1
+      ], boxBlur: [
+        1/9, 1/9, 1/9,
+        1/9, 1/9, 1/9,
+        1/9, 1/9, 1/9
+      ], sobelLeft: [
+        1,  0, -1,
+        2,  0, -2,
+        1,  0, -1
+      ], sobelRight: [
+        -1, 0, 1,
+        -2, 0, 2,
+        -1, 0, 1
+      ], sobelTop: [
+        1,  2,  1,
+        0,  0,  0,
+        -1, -2, -1  
+      ], sobelBottom: [
+        -1, 2, 1,
+        0, 0, 0,
+        1, 2, 1
+      ], identity: [
+        0, 0, 0, 
+        0, 1, 0, 
+        0, 0, 0
+      ], gaussian3x3: [
+        1,  2,  1, 
+        2,  4,  2, 
+        1,  2,  1
+      ], guassian7x7: [
+        0, 0,  0,   5,   0,   0,  0,
+        0, 5,  18,  32,  18,  5,  0,
+        0, 18, 64,  100, 64,  18, 0,
+        5, 32, 100, 100, 100, 32, 5,
+        0, 18, 64,  100, 64,  18, 0,
+        0, 5,  18,  32,  18,  5,  0,
+        0, 0,  0,   5,   0,   0,  0,
+      ], emboss: [
+        -2, -1,  0, 
+        -1,  1,  1, 
+        0,  1,  2
+      ], sharpen: [
+        0, -1,  0,
+        -1,  5, -1,
+        0, -1,  0
+      ]
+    };
+  }
+
+  //adds math functions to use per-thread
+  addFunction(func = function f(){}) {
+    this.gpu.addFunction(func);
+  }
+
+  //add kernels to run based on input data. Input/Output sizes are dynamically allocated, functions are saved on the gpu to improve runtimes
+  addKernel(name="", krnl=function foo(){}, opts) {
+    let found = this.kernels.get(name);
+    if(!found) {
+      this.kernels.set(name, makeKrnl(this.gpu,krnl,opts));
+      return true;
+    } else { 
+      console.error('Kernel already exists'); 
+      return false;
+    }
+    
+  }
+
+  addCanvasKernel(name, f,  opts, divId) {
+    let found = this.kernels.get(name);
+    if(!found) {
+      let krnl = makeCanvasKrnl(this.gpu,f,opts,divId);
+      this.kernels.set(name,krnl);
+      return krnl;
+    } else { 
+      console.error('Kernel already exists'); 
+      return false;
+    }
+    
+  }
+
+  //combine two or more kernels into a single function, this lets you run multiple kernels on the GPU (with appropriately varying inputs/output sizes) before returning to the CPU.
+  //Discount compute shaders? Not sure if this even works
+  combineKernels(name, fs=[], ckrnl=function foo() {}) {
+    let found = this.kernels.get(name);
+    if(!found) {
+      fs.forEach((f,i)=>{
+        if(typeof f === 'string') {
+          let found2 = this.kernels.get(f);
+          if(found2) fs[i] = found2;
+          else return false;
+        } else if (typeof f === 'function') {
+          if(this.kernels.get(f.name)) {
+            //all good
+          } else {
+            this.addKernel(f.name, f);
+          }
+        }
+      });
+      let krnl = this.gpu.combineKernels(...fs,ckrnl);
+      this.kernels.set(name, krnl);
+      return krnl;
+    } else { 
+      console.error('Kernel already exists'); 
+      return false;
+    }
+  }
+
+  callKernel(name="",args=[]) {
+    let result;
+    let krnl = this.kernels.get(name);
+    if(!krnl) {
+      console.error('Kernel not found');
+      return false;
+    } 
+    result = krnl(...args);
+    return result;
+  }
+
+  callCanvasKernel(name="",args=[],outputDims=[]) {
+    let result;
+    let krnl = this.kernels.get(name);
+    if(!krnl) {
+      console.error('Kernel not found');
+      return false;
+    } else {
+      if (outputDims.length === 2) krnl.setOutput(outputDims);
+      result = krnl(...args);
+      return result;
+    }
+  }
+
+  hasKernel(name="") {
+    let found = this.kernels.get(name);
+    if(!found) {
+      return false;
+    } else return true;
+  }
+
+  addFunctions() { 
+    addGpuFunctions.forEach(f => this.gpu.addFunction(f));
+
+    this.correlograms = makeKrnl(this.gpu, createGpuKernels.correlogramsKern);
+    this.correlogramsPC = makeKrnl(this.gpu, createGpuKernels.correlogramsPCKern);
+    this.dft = makeKrnl(this.gpu, createGpuKernels.dftKern);
+    this.idft = makeKrnl(this.gpu, createGpuKernels.idftKern);
+    this.dft_windowed = makeKrnl(this.gpu, createGpuKernels.dft_windowedKern);
+    this.idft_windowed = makeKrnl(this.gpu, createGpuKernels.idft_windowedKern);
+    this.fft = makeKrnl(this.gpu, createGpuKernels.fftKern);
+    this.ifft = makeKrnl(this.gpu, createGpuKernels.ifftKern);
+    this.fft_windowed = makeKrnl(this.gpu, createGpuKernels.fft_windowedKern);
+    this.ifft_windowed = makeKrnl(this.gpu, createGpuKernels.ifft_windowedKern);
+    this.listdft2D = makeKrnl(this.gpu, createGpuKernels.listdft2DKern);
+    this.listdft1D = makeKrnl(this.gpu, createGpuKernels.listdft1DKern);
+    this.listdft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listdft1D_windowedKern);
+    this.listfft1D = makeKrnl(this.gpu, createGpuKernels.listfft1DKern);
+    this.listfft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listfft1D_windowedKern);
+    this.listidft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listidft1D_windowedKern);
+    this.listifft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listifft1D_windowedKern);
+    this.bulkArrayMul = makeKrnl(this.gpu, createGpuKernels.bulkArrayMulKern);
+
+    let kernels = [
+      {name:"correlograms", krnl:this.correlograms},
+      {name:"correlogramsPC", krnl: this.correlogramsPC},
+      {name:"dft", krnl:this.dft},
+      {name:"idft", krnl:this.idft},
+      {name:"dft_windowed", krnl:this.idft_windowed},
+      {name:"fft", krnl:this.fft},
+      {name:"ifft", krnl:this.ifft},
+      {name:"fft_windowed", krnl:this.fft_windowed},
+      {name:"ifft_windowed", krnl:this.ifft_windowed},
+      {name:"listdft2D", krnl:this.listdft2D},
+      {name:"listdft1D", krnl:this.listdft1D},
+      {name:"listdft1D_windowed", krnl:this.listdft1D_windowed},
+      {name:"listfft1D", krnl:this.listfft1D},
+      {name:"listfft1D_windowed", krnl:this.listfft1D_windowed},
+      {name:"listidft1D_windowed", krnl:this.listidft1D_windowed},
+      {name:"listifft1D_windowed", krnl:this.listifft1D_windowed},
+      {name:"bulkArrayMul", krnl:this.bulkArrayMul}
+    ];
+    
+    kernels.forEach((k) => {
+      this.kernels.set(k.name,k);
+    })
+
+    //----------------------------------- Easy gpu pipelining
+    //------------Combine Kernels-------- gpu.combineKernels(f1,f2,function(a,b,c) { f1(f2(a,b),c); });
+    //----------------------------------- TODO: Make this actually work (weird error)
+
+    //Bandpass FFT+iFFT to return a cleaned up waveform
+    const signalBandpass = (signal, sampleRate, freqStart, freqEnd, scalar) => { //Returns the signal wave with the bandpass filter applied
+      var dft = this.fft_windowed(signal, sampleRate, freqStart, freqEnd, scalar, 0);
+      var filtered_signal = this.ifft_windowed(dft, sampleRate, freqStart, freqEnd, scalar); 
+      return filtered_signal;
+    }
+
+    //this.signalBandpass = this.gpu.combineKernels(this.dft_windowedKern,this.idft_windowedKern, signalBandpass);
+    
+    const signalBandpassMulti = (signals, sampleRate, freqStart, freqEnd, scalar) => {
+      var dfts = this.listdft1D_windowed(signals,sampleRate,freqStart,freqEnd,scalar, new Array(Math.ceil(signals/sampleRate)).fill(0));
+      var filtered_signals = this.listifft1D_windowed(dfts,sampleRate,freqStart,freqEnd,scalar);
+      return filtered_signals;
+    }
+
+    //this.signalBandpassMulti = this.gpu.combineKernels(this.listdft1D_windowed,this.listidft1D_windowed, signalBandpassMulti);
+
+    //TODO: automatic auto/cross correlation and ordering.
+    //Input signals like this : [signal1,signal2,autocor1,autocor2,crosscor,...repeat for desired coherence calculations] or any order of that.
+    this.gpuCoherence = (signals, sampleRate, freqStart, freqEnd, scalar) => { //Take FFTs of the signals, their autocorrelations, and cross correlation (5 FFTs per coherence), then multiply.
+      var xcors = this.correlograms(signals);
+      var dfts = this.listfft1D_windowed(xcors, sampleRate, freqStart, freqEnd, scalar, new Array(Math.ceil(signals/sampleRate)).fill(0) );
+      var products = this.bulkArrayMul(dfts, sampleRate, 5, 1);
+      return products;
+    }
+
+    //Need to get this working to be MUCH faster, the above method returns to the CPU each call, the below does not.
+    //this.gpuCoherence = this.gpu.combineKernels(this.listdft1D_windowedKern, this.bulkArrayMulKern, this.correlogramsKern, function gpuCoherence(signals,sampleRate,freqStart,freqEnd,scalar) {
+    //  var xcors = this.correlograms(signals);
+    //  var dfts = this.listdft1D_windowed(xcors, sampleRate, freqStart, freqEnd, scalar, new Array(Math.ceil(signals/sampleRate)).fill(0) );
+    //  var products = this.bulkArrayMul(dfts, sampleRate, 5, 1);
+    //  return products;
+    //});
+
+  }
+
+  gpuXCors(arrays, precompute=false, texOut = false) { //gpu implementation for bulk cross/auto correlations, outputs [[0:0],[0:1],...,[1:1],...[n:n]]
+ 
+    var outputTex;
+   
+    if(precompute === true) { //Precompute the means and estimators rather than in every single thread
+      var means = [];
+      var ests = [];
+      arrays.forEach((arr,i) => {
+        means.push(arr.reduce((prev,curr)=> curr += prev)/arr.length);
+        ests.push(Math.sqrt(means[i].reduce((sum,item) => sum += Math.pow(item-mean1,2))));
+      });
+
+      var meansbuf = [];
+      var estsbuf = [];
+      var buffer = [];
+      for(var i = 0; i < arrays.length; i++) {
+        for(var j = i; j < arrays.length; j++){
+          buffer.push(...arrays[i],...arrays[j]);
+          meansbuf.push(means[i],means[j]);
+          estsbuf.push(ests[i],ests[j]);
+        }
+      }
+
+      this.correlogramsPC.setOutput([buffer.length]);
+      this.correlogramsPC.setLoopMaxIterations(arrays[0].length*2);
+      outputTex = this.correlogramsPC(buffer, arrays[0].length, meansbuf, estsbuf)
+    }
+    else{
+      var buffer = [];
+      for(var i = 0; i < arrays.length; i++) {
+        for(var j = i; j < arrays.length; j++){
+          buffer.push(...arrays[i],...arrays[j]);
+        }
+      }
+
+      this.correlograms.setOutput([buffer.length]);
+      this.correlograms.setLoopMaxIterations(arrays[0].length*2);
+
+      outputTex = this.correlograms(buffer, arrays[0].length);
+    }
+
+    if(texOut === true) { return outputTex; }
+    var outputbuf = outputTex.toArray();
+    outputTex.delete();
+    var outputarrs = [];
+
+    for(var i = 0; i < arrays.length; i++){
+      outputarrs.push(outputbuf.splice(0, arrays[0].length));
+    }
+
+    return outputarrs;
+
+  } 
+
+  //Input array buffer and the number of seconds of data
+  gpuDFT(signalBuffer, nSeconds, scalar=1, texOut = false){
+
+    var nSamples = signalBuffer.length;
+    var sampleRate = nSamples/nSeconds;
+
+    this.dft.setOutput([signalBuffer.length]);
+    this.dft.setLoopMaxIterations(nSamples);
+
+    var outputTex = this.dft(signalBuffer, nSamples, scalar);
+    var output = null;
+    if(texOut === false){
+      var freqDist = this.makeFrequencyDistribution(nSamples, sampleRate);
+      var signalBufferProcessed = outputTex.toArray();
+      //console.log(signalBufferProcessed);
+      outputTex.delete();
+      return [freqDist,this.orderMagnitudes(signalBufferProcessed)]; //Returns x (frequencies) and y axis (magnitudes)
+    }
+    else {
+      var tex = outputTex; 
+      outputTex.delete(); 
+      return tex;
+    }
+  }
+
+  //Input array of array buffers of the same length and the number of seconds recorded
+  MultiChannelDFT(signalBuffer, nSeconds, scalar=1, texOut=false) {
+    
+    var signalBufferProcessed = [];
+      
+    signalBuffer.forEach((row) => {
+      signalBufferProcessed.push(...row);
+    });
+    //console.log(signalBufferProcessed);
+  
+    var nSamplesPerChannel = signalBuffer[0].length;
+    var sampleRate = nSamplesPerChannel/nSeconds
+
+    this.listdft1D.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
+    this.listdft1D.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
+        
+    var outputTex = this.listdft1D(signalBufferProcessed,nSamplesPerChannel, scalar);
+    if(texOut === false){
+      var orderedMagsList = [];
+
+      var freqDist = this.makeFrequencyDistribution(nSamplesPerChannel, sampleRate);
+      signalBufferProcessed = outputTex.toArray();
+      //console.log(signalBufferProcessed);
+
+      for(var i = 0; i < signalBufferProcessed.length; i+=nSamplesPerChannel){
+        orderedMagsList.push(this.orderMagnitudes([...signalBufferProcessed.slice(i,i+nSamplesPerChannel)]));
+      }
+      //Now slice up the big buffer into individual arrays for each signal
+
+      outputTex.delete();
+      return [freqDist,orderedMagsList]; //Returns x (frequencies) and y axis (magnitudes)
+    }
+    else {
+      var tex = outputTex; 
+      outputTex.delete(); 
+      return tex;
+    }
+  }
+
+      
+  //Input buffer of signals [[channel 0],[channel 1],...,[channel n]] with the same number of samples for each signal. Returns arrays of the positive DFT results in the given window.
+  MultiChannelDFT_Bandpass(signalBuffer=[],nSeconds,freqStart,freqEnd, scalar=1, texOut = false) {
+
+    var signalBufferProcessed = [];
+      
+    signalBuffer.forEach((row) => {
+      signalBufferProcessed.push(...row);
+    });
+    //console.log(signalBufferProcessed);
+
+    var freqEnd_nyquist = freqEnd*2;
+    var nSamplesPerChannel = signalBuffer[0].length;
+    var sampleRate = nSamplesPerChannel/nSeconds;
+    
+    this.listdft1D_windowed.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
+    this.listdft1D_windowed.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
+        
+    var outputTex = this.listdft1D_windowed(signalBufferProcessed,sampleRate,freqStart,freqEnd_nyquist, scalar);
+    if(texOut === true) { return outputTex; }
+    
+    signalBufferProcessed = outputTex.toArray();
+    outputTex.delete();
+
+    //console.log(signalBufferProcessed)
+    //TODO: Optimize for SPEEEEEEED.. or just pass it str8 to a shader
+    var freqDist = this.bandPassWindow(freqStart,freqEnd,sampleRate);
+    return [freqDist, this.orderBPMagnitudes(signalBufferProcessed,nSeconds,sampleRate,nSamplesPerChannel)]; //Returns x (frequencies) and y axis (magnitudes)
+  
+  }
+
+  
+  //Input array buffer and the number of seconds of data
+  gpuFFT(signalBuffer, nSeconds, scalar=1, sampleRate, texOut = false){
+
+    var nSamples = signalBuffer.length;
+    var sampleRate = nSamples/nSeconds;
+
+    this.fft.setOutput([signalBuffer.length]);
+    this.fft.setLoopMaxIterations(nSamples);
+
+    var outputTex = this.fft(signalBuffer, nSamples, scalar, sampleRate);
+    var output = null;
+    if(texOut === false){
+      var freqDist = this.makeFrequencyDistribution(nSamples, sampleRate);
+      var signalBufferProcessed = outputTex.toArray();
+      //console.log(signalBufferProcessed);
+      outputTex.delete();
+      return [freqDist,this.orderMagnitudes(signalBufferProcessed)]; //Returns x (frequencies) and y axis (magnitudes)
+    }
+    else {
+      var tex = outputTex; 
+      outputTex.delete(); 
+      return tex;
+    }
+  }
+
+  //Input array of array buffers of the same length and the number of seconds recorded
+  MultiChannelFFT(signalBuffer, nSeconds, scalar=1, texOut=false) {
+    
+    var signalBufferProcessed = [];
+      
+    signalBuffer.forEach((row) => {
+      signalBufferProcessed.push(...row);
+    });
+    //console.log(signalBufferProcessed);
+  
+    var nSamplesPerChannel = signalBuffer[0].length;
+    var sampleRate = nSamplesPerChannel/nSeconds
+
+    this.listfft1D.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
+    this.listfft1D.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
+        
+    var outputTex = this.listfft1D(signalBufferProcessed,nSamplesPerChannel, scalar, sampleRate);
+    if(texOut === false){
+      var orderedMagsList = [];
+
+      var freqDist = this.makeFrequencyDistribution(nSamplesPerChannel, sampleRate);
+      signalBufferProcessed = outputTex.toArray();
+      //console.log(signalBufferProcessed);
+
+      for(var i = 0; i < signalBufferProcessed.length; i+=nSamplesPerChannel){
+        orderedMagsList.push(this.orderMagnitudes([...signalBufferProcessed.slice(i,i+nSamplesPerChannel)]));
+      }
+      //Now slice up the big buffer into individual arrays for each signal
+
+      outputTex.delete();
+      return [freqDist,orderedMagsList]; //Returns x (frequencies) and y axis (magnitudes)
+    }
+    else {
+      var tex = outputTex; 
+      outputTex.delete(); 
+      return tex;
+    }
+  }
+
+      
+  //Input buffer of signals [[channel 0],[channel 1],...,[channel n]] with the same number of samples for each signal. Returns arrays of the positive DFT results in the given window.
+  MultiChannelFFT_Bandpass(signalBuffer=[],nSeconds,freqStart,freqEnd, scalar=1, texOut = false) {
+
+    var signalBufferProcessed = [];
+      
+    signalBuffer.forEach((row) => {
+      signalBufferProcessed.push(...row);
+    });
+    //console.log(signalBufferProcessed);
+
+    var freqEnd_nyquist = freqEnd*2;
+    var nSamplesPerChannel = signalBuffer[0].length;
+    var sampleRate = nSamplesPerChannel/nSeconds;
+    
+    this.listfft1D_windowed.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
+    this.listfft1D_windowed.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
+        
+    var outputTex = this.listfft1D_windowed(signalBufferProcessed,sampleRate,freqStart,freqEnd_nyquist, scalar);
+    if(texOut === true) { return outputTex; }
+    
+    signalBufferProcessed = outputTex.toArray();
+    outputTex.delete();
+
+    //console.log(signalBufferProcessed)
+    //TODO: Optimize for SPEEEEEEED.. or just pass it str8 to a shader
+    var freqDist = this.bandPassWindow(freqStart,freqEnd,sampleRate);
+    return [freqDist, this.orderBPMagnitudes(signalBufferProcessed,nSeconds,sampleRate,nSamplesPerChannel)]; //Returns x (frequencies) and y axis (magnitudes)
+  
+  }
+
+  orderMagnitudes(unorderedMags){
+    return [...unorderedMags.slice(Math.ceil(unorderedMags.length*.5),unorderedMags.length),...unorderedMags.slice(0,Math.ceil(unorderedMags.length*.5))];  
+  }
+
+  makeFrequencyDistribution(FFTlength, sampleRate) {
+    var N = FFTlength; // FFT size
+    var df = sampleRate/N; // frequency resolution
+    
+    var freqDist = [];
+    for(var i=(-N/2); i<(N/2); i++) {
+      var freq = i*df;
+      freqDist.push(freq);
+    }
+    return freqDist;
+  }
+
+  //Order and sum positive magnitudes from bandpass DFT
+  orderBPMagnitudes(signalBufferProcessed,nSeconds,sampleRate,nSamplesPerChannel) {
+    var magList = [];
+
+      for(var i = 0; i < signalBufferProcessed.length; i+=nSamplesPerChannel){
+        magList.push([...signalBufferProcessed.slice(i,Math.ceil(nSamplesPerChannel*.5+i))]);
+      }
+
+
+    var summedMags = [];
+    var _sampleRate = 1/sampleRate;
+    if(nSeconds > 1) { //Need to sum results when sample time > 1 sec
+      magList.forEach((row, k) => {
+        summedMags.push([]);
+        var _max = 1/Math.max(...row); //uhh
+        for(var i = 0; i < row.length; i++ ){
+          if(i == 0){
+              summedMags[k]=row.slice(i,Math.floor(sampleRate));
+              i = Math.floor(sampleRate);
+          }
+          else {
+              var j = i-Math.floor(Math.floor(i*_sampleRate)*sampleRate)-1; //console.log(j);
+              summedMags[k][j] = summedMags[k][j] * row[i-1]*_max; 
+          }
+        }
+        summedMags[k] = [...summedMags[k].slice(0,Math.ceil(summedMags[k].length*0.5))]
+
+      });
+      //console.log(summedMags);
+      return summedMags;  
+    }
+    
+    else {return magList;}
+  }
+
+  //Returns the x axis (frequencies) for the bandpass filter amplitudes. The window gets stretched or squeezed between the chosen frequencies based on the sample rate in my implementation.
+  bandPassWindow(freqStart,freqEnd,nSteps,posOnly=true) {
+ 
+    var freqEnd_nyquist = freqEnd*2;
+    let increment = (freqEnd_nyquist - freqStart)/nSteps;
+
+    var fftwindow = [];
+    if(posOnly === true){
+      for (var i = 0; i < Math.ceil(0.5*nSteps); i+=increment){
+          fftwindow.push(freqStart + (freqEnd_nyquist-freqStart)*i/(nSteps));
+      }
+    }
+    else{
+      for (var i = -Math.ceil(0.5*nSteps); i < Math.ceil(0.5*nSteps); i+=increment){
+        fftwindow.push(freqStart + (freqEnd_nyquist-freqStart)*i/(nSteps));
+      }
+    }
+    return fftwindow;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+var mandebrotFrag = 
+(/* unused pure expression or super */ null && (`
+uniform sampler1D tex;
+uniform vec2 center;
+uniform float scale;
+uniform int iter;
+
+void main() {
+    vec2 z, c;
+
+    c.x = 1.3333 * (gl_TexCoord[0].x - 0.5) * scale - center.x;
+    c.y = (gl_TexCoord[0].y - 0.5) * scale - center.y;
+
+    int i;
+    z = c;
+    for(i=0; i<iter; i++) {
+        float x = (z.x * z.x - z.y * z.y) + c.x;
+        float y = (z.y * z.x + z.x * z.y) + c.y;
+
+        if((x * x + y * y) > 4.0) break;
+        z.x = x;
+        z.y = y;
+    }
+
+    gl_FragColor = texture1D(tex, (i == iter ? 0.0 : float(i)) / 100.0);
+}
+`));
+
+var juliaSetFrag =
+(/* unused pure expression or super */ null && (`
+uniform sampler1D tex;
+uniform vec2 c;
+uniform int iter;
+
+void main() {
+    vec2 z;
+    z.x = 3.0 * (gl_TexCoord[0].x - 0.5);
+    z.y = 2.0 * (gl_TexCoord[0].y - 0.5);
+
+    int i;
+    for(i=0; i<iter; i++) {
+        float x = (z.x * z.x - z.y * z.y) + c.x;
+        float y = (z.y * z.x + z.x * z.y) + c.y;
+
+        if((x * x + y * y) > 4.0) break;
+        z.x = x;
+        z.y = y;
+    }
+
+    gl_FragColor = texture1D(tex, (i == iter ? 0.0 : float(i)) / 100.0);
+}
+`));
+
+// EXTERNAL MODULE: ./node_modules/brainsatplay-math/index.js + 1 modules
+var brainsatplay_math = __webpack_require__(346);
+// EXTERNAL MODULE: ./src/lib/utils/Parsing.js
+var Parsing = __webpack_require__(872);
+;// CONCATENATED MODULE: ./src/lib/workerGPU/workerGPU.js
+
+
+ //GPU.js utilities for the web worker callback manager
+
+class workerGPU {
+  constructor(callbackManager) {
+    try {
+      this.gpu = new gpuUtils();
+    } catch (err) {
+      return undefined;
+    }
+
+    this.callbackManager = callbackManager;
+    callbackManager.gpu = this.gpu;
+    this.callbacks = [{
+      //add a gpu function call usable in kernels, follow gpujs's tutorials and pass stringified functions using their format
+      case: 'addgpufunc',
+      callback: (self, args, origin) => {
+        //arg0 = gpu in-thread function string
+        return self.gpu.addFunction((0,Parsing/* parseFunctionFromText */.Nc)(args[0]));
+      }
+    }, {
+      //add a gpu kernels, follow gpujs's tutorials and pass stringified functions using their format
+      case: 'addkernel',
+      callback: (self, args, origin) => {
+        //arg0 = kernel name, arg1 = kernel function string
+        return self.gpu.addKernel(args[0], (0,Parsing/* parseFunctionFromText */.Nc)(args[1]));
+      }
+    }, {
+      //call a custom gpu kernel
+      case: 'callkernel',
+      callback: (self, args, origin) => {
+        //arg0 = kernel name, args.slice(1) = kernel input arguments
+        return self.gpu.callKernel(args[0], args.slice(1)); //generalized gpu kernel calls
+      }
+    }, {
+      case: 'dft',
+      callback: (self, args, origin) => {
+        if (args[2] == undefined) args[2] = 1;
+        return self.gpu.gpuDFT(...args);
+      }
+    }, {
+      case: 'multidft',
+      callback: (self, args, origin) => {
+        if (args[2] == undefined) args[2] = 1;
+        return self.gpu.MultiChannelDFT(...args);
+      }
+    }, {
+      case: 'multidftbandpass',
+      callback: (self, args, origin) => {
+        if (args[4] == undefined) args[4] = 1;
+        return self.gpu.MultiChannelDFT_Bandpass(...args);
+      }
+    }, {
+      case: 'fft',
+      callback: (self, args, origin) => {
+        if (args[2] == undefined) args[2] = 1;
+        return self.gpu.gpuFFT(...args);
+      }
+    }, {
+      case: 'multifft',
+      callback: (self, args, origin) => {
+        if (args[2] == undefined) args[2] = 1;
+        return self.gpu.MultiChannelFFT(...args);
+      }
+    }, {
+      case: 'multifftbandpass',
+      callback: (self, args, origin) => {
+        if (args[4] == undefined) args[4] = 1;
+        return self.gpu.MultiChannelFFT_Bandpass(...args);
+      }
+    }, {
+      case: 'gpucoh',
+      callback: (self, args, origin) => {
+        return self.gpu.gpuCoherence(...args);
+      }
+    }, {
+      case: 'coherence',
+      callback: (self, args, origin) => {
+        const correlograms = brainsatplay_math/* Math2.correlograms */.d.correlograms(args[0]); //should get this onto the GPU also, an untested function exists
+
+        const buffer = [...args[0], ...correlograms]; //console.log(buffer)
+
+        var dfts;
+        var scalar = 1; //console.log(mins)
+        //console.log(buffer);
+
+        dfts = self.gpu.MultiChannelDFT_Bandpass(buffer, args[1], args[2], args[3], scalar); //console.log(dfts)
+
+        const cordfts = dfts[1].splice(args[0].length, buffer.length - args[0].length); //console.log(cordfts)
+
+        const coherenceResults = [];
+        const nChannels = args[0].length; //cross-correlation dfts arranged like e.g. for 4 channels: [0:0, 0:1, 0:2, 0:3, 1:1, 1:2, 1:3, 2:2, 2:3, 3:3] etc.
+
+        var k = 0;
+        var l = 0;
+        cordfts.forEach((row, i) => {
+          //move autocorrelation results to front to save brain power
+          if (l + k === nChannels) {
+            var temp = cordfts.splice(i, 1);
+            k++;
+            cordfts.splice(k, 0, ...temp);
+            l = 0; //console.log(i);
+          }
+
+          l++;
+        }); //Now arranged like [0:0,1:1,2:2,3:3,0:1,0:2,0:3,1:2,1:3,2:3]
+        //Outputs FFT coherence data in order of channel data inputted e.g. for 4 channels resulting DFTs = [0:1,0:2,0:3,1:2,1:3,2:3];
+
+        var autoFFTproducts = [];
+        k = 0;
+        l = 1;
+        cordfts.forEach((dft, i) => {
+          var newdft = new Array(dft.length).fill(0);
+
+          if (i < nChannels) {
+            //sort out autocorrelogram FFTs
+            dft.forEach((amp, j) => {
+              newdft[j] = amp; //*dfts[1][i][j];
+            });
+            autoFFTproducts.push(newdft);
+          } else {
+            //now multiply cross correlogram ffts and divide by autocorrelogram ffts (magnitude squared coherence)
+            dft.forEach((amp, j) => {
+              newdft[j] = amp * amp / (autoFFTproducts[k][j] * autoFFTproducts[k + l][j]); //Magnitude squared coherence;
+
+              if (newdft[j] > 1) {
+                newdft[j] = 1;
+              } //caps the values at 1
+              //newdft[j] = Math.pow(newdft[j],.125)
+
+            });
+            l++;
+
+            if (l + k === nChannels) {
+              k++;
+              l = 1;
+            }
+
+            coherenceResults.push(newdft);
+          }
+        });
+        return [dfts[0], dfts[1], coherenceResults];
+      }
+    }];
+    this.addCallbacks();
+  }
+
+  addCallbacks(callbacks = this.callbacks) {
+    callbacks.forEach(fn => {
+      this.callbackManager.addCallback(fn.case, fn.callback);
+
+      if (fn.aliases) {
+        fn.aliases.forEach(c => {
+          this.callbackManager.addCallback(c, fn.callback);
+        });
+      }
+    });
+  }
+
+}
+
+/***/ }),
+
+/***/ 315:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "r": () => (/* binding */ workerRenderer)
+});
+
+;// CONCATENATED MODULE: ./src/lib/workerRenderer/ProxyListener.js
 //From Worker Thread
 function noop() {} /////////////https://threejsfundamentals.org/threejs/lessons/threejs-offscreencanvas.html
 
@@ -2793,288 +3388,32 @@ class ProxyManager {
   }
 
 }
-
-/***/ }),
-
-/***/ 521:
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Y": () => (/* binding */ CallbackManager)
-/* harmony export */ });
-/* harmony import */ var gpujsutils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(526);
-/* harmony import */ var _Math2__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(343);
-/* harmony import */ var _Event_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(228);
-/* harmony import */ var _ProxyListener_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(539);
+// EXTERNAL MODULE: ./src/lib/utils/Parsing.js
+var Parsing = __webpack_require__(872);
+;// CONCATENATED MODULE: ./src/lib/workerRenderer/workerRenderer.js
+//canvas and threejs rendering utilities on the worker
 
 
+class workerRenderer {
+  constructor(callbackManager) {
+    this.callbackManager = callbackManager;
+    callbackManager.canvas = new OffscreenCanvas(512, 512); //can add fnctions and refer to this.offscreen 
 
+    callbackManager.ANIMATION = undefined;
+    callbackManager.ANIMATIONFUNC = undefined;
+    callbackManager.ANIMATING = false;
+    callbackManager.ANIMFRAMETIME = performance.now(); //ms based on UTC stamps
 
-
-let dynamicImport = async url => {
-  let module = await __webpack_require__(776)(url);
-  return module;
-}; //Get the text inside of a function (regular or arrow);
-
-
-function getFunctionBody(methodString) {
-  return methodString.toString().replace(/^\W*(function[^{]+\{([\s\S]*)\}|[^=]+=>[^{]*\{([\s\S]*)\}|[^=]+=>(.+))/i, '$2$3$4');
-}
-
-function getFunctionHead(methodString) {
-  let fnstring = methodString.toString();
-  return fnstring.slice(0, fnstring.indexOf('{') + 1);
-}
-
-function buildNewFunction(head, body) {
-  let newFunc = eval(head + body + '}');
-  return newFunc;
-}
-
-function isFunction(string) {
-  let regex = new RegExp('(|[a-zA-Z]\w*|\([a-zA-Z]\w*(,\s*[a-zA-Z]\w*)*\))\s*=>');
-  let func = typeof string === 'string' ? string.substring(0, 10).includes('function') : false;
-  let arrow = typeof string === 'string' ? regex.test(string) : false;
-  if (func || arrow) return true;else return false;
-}
-
-function parseFunctionFromText(method) {
-  //Get the text inside of a function (regular or arrow);
-  let getFunctionBody = methodString => {
-    return methodString.replace(/^\W*(function[^{]+\{([\s\S]*)\}|[^=]+=>[^{]*\{([\s\S]*)\}|[^=]+=>(.+))/i, '$2$3$4');
-  };
-
-  let getFunctionHead = methodString => {
-    let startindex = methodString.indexOf(')');
-    return methodString.slice(0, methodString.indexOf('{', startindex) + 1);
-  };
-
-  let newFuncHead = getFunctionHead(method);
-  let newFuncBody = getFunctionBody(method);
-  let newFunc;
-
-  if (newFuncHead.includes('function ')) {
-    let varName = newFuncHead.split('(')[1].split(')')[0];
-    newFunc = new Function(varName, newFuncBody);
-  } else {
-    if (newFuncHead.substring(0, 6) === newFuncBody.substring(0, 6)) {
-      //newFuncBody = newFuncBody.substring(newFuncHead.length);
-      let varName = newFuncHead.split('(')[1].split(')')[0]; //console.log(varName, newFuncHead ,newFuncBody);
-
-      newFunc = new Function(varName, newFuncBody.substring(newFuncBody.indexOf('{') + 1, newFuncBody.length - 1));
-    } else newFunc = eval(newFuncHead + newFuncBody + "}");
-  }
-
-  return newFunc;
-}
-
-class CallbackManager {
-  ctx;
-  context;
-
-  constructor() {
-    try {
-      window.gpu = new gpujsutils__WEBPACK_IMPORTED_MODULE_0__/* .gpuUtils */ .T9();
-      this.gpu = window.gpu;
-    } catch {
-      let gpu = new gpujsutils__WEBPACK_IMPORTED_MODULE_0__/* .gpuUtils */ .T9();
-      this.gpu = gpu;
-    }
-
-    this.EVENTS = new _Event_js__WEBPACK_IMPORTED_MODULE_2__/* .Events */ .z();
-    this.EVENTSETTINGS = [];
-    this.canvas = new OffscreenCanvas(512, 512); //can add fnctions and refer to this.offscreen 
-
-    this.ANIMATION = undefined;
-    this.ANIMATIONFUNC = undefined;
-    this.ANIMATING = false;
-    this.ANIMFRAMETIME = performance.now(); //ms based on UTC stamps
-
-    this.threeUtil = undefined;
-    this.PROXYMANAGER = new _ProxyListener_js__WEBPACK_IMPORTED_MODULE_3__/* .ProxyManager */ .LG();
-    this.ID = Math.floor(Math.random() * 1000); //just a reference for discerning threads 
+    callbackManager.threeUtil = undefined;
+    callbackManager.PROXYMANAGER = new ProxyManager();
 
     try {
       if (window) console.log('worker in window!');
     } catch (err) {
       self.document = {}; //threejs hack
-    } //args = array of expected arguments
-    //origin = optional tag on input object
-    //self = this. scope for variables within the callbackmanager (including values set)
+    }
 
-
-    let defaultFunctions = [{
-      //ping pong, just validates responsiveness
-      case: 'ping',
-      callback: (self, args, origin) => {
-        return 'pong';
-      }
-    }, {
-      //return a list of function calls available on the worker
-      case: 'list',
-      callback: (self, args, origin) => {
-        let list = [];
-        this.callbacks.forEach((callback, name) => {
-          list.push(name);
-        });
-        return list;
-      }
-    }, {
-      //add a local function, can implement whole algorithm pipelines on-the-fly
-      case: 'addfunc',
-      callback: (self, args, origin) => {
-        //arg0 = name, arg1 = function string (arrow or normal)
-        if (!args[0] || !args[1]) return false;
-        let newFunc = parseFunctionFromText(args[1]);
-        self.callbacks.set(args[0], newFunc);
-        return true;
-      }
-    }, {
-      case: 'removefunc',
-      callback: (self, args, origin) => {
-        if (args[0]) return this.removeCallback(args[0]);else return undefined;
-      }
-    }, {
-      //set locally accessible values, just make sure not to overwrite the defaults in the callbackManager
-      case: 'setValues',
-      callback: (self, args, origin) => {
-        if (typeof args === 'object') {
-          Object.keys(args).forEach(key => {
-            self[key] = args[key]; //variables will be accessible in functions as this.x or this['x']
-
-            if (self.threeUtil) self.threeUtil[key] = args[key];
-          });
-          return true;
-        } else return false;
-      }
-    }, {
-      //append array values
-      case: 'appendValues',
-      callback: (self, args, origin) => {
-        if (typeof args === 'object') {
-          Object.keys(args).forEach(key => {
-            if (!self[key]) self[key] = args[key];else if (Array.isArray(args[key])) self[key].push(args[key]); //variables will be accessible in functions as this.x or this['x']
-            else self[key] = args[key];
-          });
-          return true;
-        } else return false;
-      }
-    }, {
-      //for use with transfers
-      case: 'setValuesFromArrayBuffers',
-      callback: (self, args, origin) => {
-        if (typeof args === 'object') {
-          Object.keys(args).forEach(key => {
-            if (args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key] = Array.from(args[key]);else self[key] = args[key];
-          });
-          return true;
-        } else return false;
-      }
-    }, {
-      //for use with transfers
-      case: 'appendValuesFromArrayBuffers',
-      callback: (self, args, origin) => {
-        if (typeof args === 'object') {
-          Object.keys(args).forEach(key => {
-            if (!self[key] && args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key] = Array.from(args[key]);else if (!self[key]) self[key] = args[key];else if (args[key].__proto__.__proto__.constructor.name === 'TypedArray') self[key].push(Array.from(args[key]));else if (Array.isArray(args[key])) self[key].push(args[key]); //variables will be accessible in functions as this.x or this['x']
-            else self[key] = args[key];
-          });
-          return true;
-        } else return false;
-      }
-    }, {
-      //parses a stringified class prototype (class x{}.toString()) containing function methods for use on the worker
-      case: 'transferClassObject',
-      callback: (self, args, origin) => {
-        if (typeof args === 'object') {
-          Object.keys(args).forEach(key => {
-            if (typeof args[key] === 'string') {
-              let obj = args[key];
-              if (args[key].indexOf('class') === 0) obj = eval('(' + args[key] + ')');
-              self[key] = obj; //variables will be accessible in functions as this.x or this['x']
-              //console.log(self,key,obj);
-
-              if (self.threeUtil) self.threeUtil[key] = obj;
-            }
-          });
-          return true;
-        } else return false;
-      }
-    }, {
-      //add a gpu function call usable in kernels, follow gpujs's tutorials and pass stringified functions using their format
-      case: 'addgpufunc',
-      callback: (self, args, origin) => {
-        //arg0 = gpu in-thread function string
-        return self.gpu.addFunction(parseFunctionFromText(args[0]));
-      }
-    }, {
-      //add a gpu kernels, follow gpujs's tutorials and pass stringified functions using their format
-      case: 'addkernel',
-      callback: (self, args, origin) => {
-        //arg0 = kernel name, arg1 = kernel function string
-        return self.gpu.addKernel(args[0], parseFunctionFromText(args[1]));
-      }
-    }, {
-      //call a custom gpu kernel
-      case: 'callkernel',
-      callback: (self, args, origin) => {
-        //arg0 = kernel name, args.slice(1) = kernel input arguments
-        return self.gpu.callKernel(args[0], args.slice(1)); //generalized gpu kernel calls
-      }
-    }, {
-      //MessageChannel port, it just runs the whole callback system to keep it pain-free, while allowing messages from other workers
-      case: 'addport',
-      callback: (self, args, origin) => {
-        //args[0] = eventName, args[1] = case, only fires event if from specific same origin
-        let port = args[1];
-        port.onmessage = onmessage; //sets up a new receiver source (from other workers, perform addevent on the other worker)
-
-        this[args[0]] = port; //locally 
-      }
-    }, {
-      //add an event to the event manager, this helps building automated pipelines between threads
-      case: 'addevent',
-      callback: (self, args, origin) => {
-        //args[0] = eventName, args[1] = case, only fires event if from specific same origin
-        self.EVENTSETTINGS.push({
-          eventName: args[0],
-          case: args[1],
-          port: args[2],
-          origin: origin
-        }); //console.log(args);
-
-        if (args[2]) {
-          let port = args[2];
-          port.onmessage = onmessage; //attach the port onmessage event
-
-          this[args[0] + 'port'] = port;
-        }
-
-        return true;
-      }
-    }, {
-      //internal event subscription, look at Event.js for usage, its essentially a function trigger manager for creating algorithms
-      case: 'subevent',
-      callback: (self, args, origin) => {
-        //args[0] = eventName, args[1] = response function(self,args,origin) -> lets you reference self for setting variables
-        if (typeof args[0] !== 'string') return false;
-        let response = parseFunctionFromText(args[1]);
-        let eventSetting = this.checkEvents(args[0]); //this will contain the port setting if there is any
-        //console.log(args, eventSetting)
-
-        return self.EVENTS.subEvent(args[0], output => {
-          response(self, output, origin, eventSetting?.port, eventSetting?.eventName); //function wrapper so you can access self from the event subscription
-        });
-      }
-    }, {
-      //internal event unsubscribe
-      case: 'unsubevent',
-      callback: (self, args, origin) => {
-        //args[0] = eventName, args[1] = case, only fires event if from specific same origin
-        return self.EVENTS.unsubEvent(args[0], args[1]);
-      }
-    }, {
+    this.callbacks = [{
       //resize an offscreen canvas
       case: 'resizecanvas',
       callback: (self, args, origin) => {
@@ -3107,29 +3446,29 @@ class CallbackManager {
         }
 
         if (!self.threeUtil) {
-          let module = await dynamicImport('./workerThreeUtils.js');
+          let module = await (0,Parsing/* dynamicImport */.yy)('./lib/workerRenderer/workerThreeUtils.js');
           self.threeUtil = new module.threeUtil(self.canvas, self, self.PROXYMANAGER.getProxy(args[0]));
           self.THREE = self.threeUtil.THREE; //add another reference for the hell of it
         }
 
         if (typeof args[1] === 'object') {
           //first is the setup function
-          await this.runCallback('setValues', args[1]);
+          await self.runCallback('setValues', args[1]);
         } //console.log(args)
 
 
         if (args[2]) {
           //first is the setup function
-          self.threeUtil.setup = parseFunctionFromText(args[2]);
+          self.threeUtil.setup = (0,Parsing/* parseFunctionFromText */.Nc)(args[2]);
         }
 
         if (args[3]) {
           //next is the draw function (for 1 frame)
-          self.threeUtil.draw = parseFunctionFromText(args[3]);
+          self.threeUtil.draw = (0,Parsing/* parseFunctionFromText */.Nc)(args[3]);
         }
 
         if (args[4]) {
-          self.threeUtil.clear = parseFunctionFromText(args[4]);
+          self.threeUtil.clear = (0,Parsing/* parseFunctionFromText */.Nc)(args[4]);
         }
 
         self.threeUtil.clear(self, args, origin);
@@ -3141,18 +3480,19 @@ class CallbackManager {
       case: 'startThree',
       callback: async (self, args, origin) => {
         //run the setup to start the three animation
-        if (this.ANIMATING) {
+        if (self.ANIMATING) {
           self.ANIMATING = false;
           cancelAnimationFrame(self.ANIMATION);
         }
 
-        if (!this.threeUtil) {
-          let module = await dynamicImport('./workerThreeUtils.js'); //console.log(module);
+        if (!self.threeUtil) {
+          let module = await (0,Parsing/* dynamicImport */.yy)('./lib/workerRenderer/workerThreeUtils.js'); //not sure about right url till we test again
+          //console.log(module);
 
           self.threeUtil = new module.threeUtil(self.canvas, self, self.PROXYMANAGER.getProxy(args[0]));
         }
 
-        if (this.threeUtil) {
+        if (self.threeUtil) {
           self.threeUtil.clear(self, args, origin);
           self.threeUtil.setup(self, args, origin);
         }
@@ -3163,8 +3503,8 @@ class CallbackManager {
       case: 'clearThree',
       callback: (self, args, origin) => {
         //run the clear function to stop three
-        if (this.threeUtil) {
-          this.threeUtil.clear(self, args, origin);
+        if (self.threeUtil) {
+          self.threeUtil.clear(self, args, origin);
         }
 
         return true;
@@ -3173,7 +3513,7 @@ class CallbackManager {
       case: 'setAnimation',
       callback: (self, args, origin) => {
         //pass a draw function to be run on an animation loop. Reference this.canvas and this.context or canvas and context. Reference values with this.x etc. and use setValues to set the values from another thread
-        this.animationFunc = parseFunctionFromText(args[0]);
+        self.animationFunc = (0,Parsing/* parseFunctionFromText */.Nc)(args[0]);
         return true;
       }
     }, {
@@ -3235,206 +3575,1219 @@ class CallbackManager {
         tselfhis.ANIMFRAMETIME = performance.now();
         return time;
       }
-    }, {
-      case: 'xcor',
-      callback: (self, args, origin) => {
-        return _Math2__WEBPACK_IMPORTED_MODULE_1__/* .Math2.crosscorrelation */ .d.crosscorrelation(...args);
-      }
-    }, {
-      case: 'autocor',
-      callback: (self, args, origin) => {
-        return _Math2__WEBPACK_IMPORTED_MODULE_1__/* .Math2.autocorrelation */ .d.autocorrelation(args);
-      }
-    }, {
-      case: 'cov1d',
-      callback: (self, args, origin) => {
-        return _Math2__WEBPACK_IMPORTED_MODULE_1__/* .Math2.cov1d */ .d.cov1d(...args);
-      }
-    }, {
-      case: 'cov2d',
-      callback: (self, args, origin) => {
-        return _Math2__WEBPACK_IMPORTED_MODULE_1__/* .Math2.cov2d */ .d.cov2d(args);
-      }
-    }, {
-      case: 'sma',
-      callback: (self, args, origin) => {
-        return _Math2__WEBPACK_IMPORTED_MODULE_1__/* .Math2.sma */ .d.sma(...args);
-      }
-    }, {
-      case: 'dft',
-      callback: (self, args, origin) => {
-        if (args[2] == undefined) args[2] = 1;
-        return self.gpu.gpuDFT(...args);
-      }
-    }, {
-      case: 'multidft',
-      callback: (self, args, origin) => {
-        if (args[2] == undefined) args[2] = 1;
-        return self.gpu.MultiChannelDFT(...args);
-      }
-    }, {
-      case: 'multidftbandpass',
-      callback: (self, args, origin) => {
-        if (args[4] == undefined) args[4] = 1;
-        return self.gpu.MultiChannelDFT_Bandpass(...args);
-      }
-    }, {
-      case: 'fft',
-      callback: (self, args, origin) => {
-        if (args[2] == undefined) args[2] = 1;
-        return self.gpu.gpuFFT(...args);
-      }
-    }, {
-      case: 'multifft',
-      callback: (self, args, origin) => {
-        if (args[2] == undefined) args[2] = 1;
-        return self.gpu.MultiChannelFFT(...args);
-      }
-    }, {
-      case: 'multifftbandpass',
-      callback: (self, args, origin) => {
-        if (args[4] == undefined) args[4] = 1;
-        return self.gpu.MultiChannelFFT_Bandpass(...args);
-      }
-    }, {
-      case: 'gpucoh',
-      callback: (self, args, origin) => {
-        return self.gpu.gpuCoherence(...args);
-      }
-    }, {
-      case: 'coherence',
-      callback: (self, args, origin) => {
-        const correlograms = _Math2__WEBPACK_IMPORTED_MODULE_1__/* .Math2.correlograms */ .d.correlograms(args[0]);
-        const buffer = [...args[0], ...correlograms]; //console.log(buffer)
-
-        var dfts;
-        var scalar = 1; //console.log(mins)
-        //console.log(buffer);
-
-        dfts = self.gpu.MultiChannelDFT_Bandpass(buffer, args[1], args[2], args[3], scalar); //console.log(dfts)
-
-        const cordfts = dfts[1].splice(args[0].length, buffer.length - args[0].length); //console.log(cordfts)
-
-        const coherenceResults = [];
-        const nChannels = args[0].length; //cross-correlation dfts arranged like e.g. for 4 channels: [0:0, 0:1, 0:2, 0:3, 1:1, 1:2, 1:3, 2:2, 2:3, 3:3] etc.
-
-        var k = 0;
-        var l = 0;
-        cordfts.forEach((row, i) => {
-          //move autocorrelation results to front to save brain power
-          if (l + k === nChannels) {
-            var temp = cordfts.splice(i, 1);
-            k++;
-            cordfts.splice(k, 0, ...temp);
-            l = 0; //console.log(i);
-          }
-
-          l++;
-        }); //Now arranged like [0:0,1:1,2:2,3:3,0:1,0:2,0:3,1:2,1:3,2:3]
-        //Outputs FFT coherence data in order of channel data inputted e.g. for 4 channels resulting DFTs = [0:1,0:2,0:3,1:2,1:3,2:3];
-
-        var autoFFTproducts = [];
-        k = 0;
-        l = 1;
-        cordfts.forEach((dft, i) => {
-          var newdft = new Array(dft.length).fill(0);
-
-          if (i < nChannels) {
-            //sort out autocorrelogram FFTs
-            dft.forEach((amp, j) => {
-              newdft[j] = amp; //*dfts[1][i][j];
-            });
-            autoFFTproducts.push(newdft);
-          } else {
-            //now multiply cross correlogram ffts and divide by autocorrelogram ffts (magnitude squared coherence)
-            dft.forEach((amp, j) => {
-              newdft[j] = amp * amp / (autoFFTproducts[k][j] * autoFFTproducts[k + l][j]); //Magnitude squared coherence;
-
-              if (newdft[j] > 1) {
-                newdft[j] = 1;
-              } //caps the values at 1
-              //newdft[j] = Math.pow(newdft[j],.125)
-
-            });
-            l++;
-
-            if (l + k === nChannels) {
-              k++;
-              l = 1;
-            }
-
-            coherenceResults.push(newdft);
-          }
-        });
-        return [dfts[0], dfts[1], coherenceResults];
-      }
     }];
-    this.callbacks = new Map();
-    defaultFunctions.forEach(o => {
-      if (o.case) this.callbacks.set(o.case, o.callback);
-      if (o.aliases) o.aliases.forEach(alias => this.callbacks.set(alias, o.callback));
+    this.addCallbacks();
+  }
+
+  addCallbacks(callbacks = this.callbacks) {
+    callbacks.forEach(fn => {
+      this.callbackManager.addCallback(fn.case, fn.callback);
+
+      if (fn.aliases) {
+        fn.aliases.forEach(c => {
+          this.callbackManager.addCallback(c, fn.callback);
+        });
+      }
     });
   }
 
-  addCallback(functionName, callback = (self, args, origin) => {}) {
-    if (!functionName || !callback) return false; //this.removeCallback(functionName); //removes existing callback if it is there
+}
 
-    this.callbacks.set(functionName, callback);
-    return true;
-  }
+/***/ }),
 
-  removeCallback(functionName) {
-    let found = this.callbacks.get(functionName);
+/***/ 346:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-    if (found) {
-      this.callbacks.delete(functionName);
-      return true;
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "d": () => (/* reexport */ Math2)
+});
+
+;// CONCATENATED MODULE: ./node_modules/brainsatplay-math/Math2.js
+//By Joshua Brewster (AGPL)
+
+
+/**
+ * Math2 Contains All Static Methods
+ * We'll add more useful static things like filter kernels etc. as we get to making them.
+ * 
+ * //Just type these and the variable inputs that pop up should be easy to follow. Everything is commented otherwise till we document it
+ * genSineWave() //generate a sine wave
+ * getSineAmplitude() //get amplitude of a sine at time t
+ * mean() //array mean
+ * mode() //array mode
+ * std() //standard dev
+ * relError() //relative error
+ * informationEntropy() //trying to build a maxent distribution off of this stuff
+ * zscore() //array z score
+ * variance() //variance
+ * dot() //dot product
+ * cross3D() //3d cross product
+ * magnitude() //vector magnitude
+ * distance() //distance function p1-p2
+ * normalize() //array normalization
+ * newtonsMethod() //root approximation
+ * integral() //1d integral
+ * dintegral() //2d integral
+ * tintegral() //3d integral
+ * pintegral() //2d path integral
+ * makeVec() 
+ * transpose(mat) //2d mat transpose
+ * matmul(a,b) 
+ * matscale(mat,scalar)
+ * matadd(a,b)
+ * matsub(a,b)
+ * normalDistribution(samples=[], normalize=true) //create a norall (gaussian) distribution
+ * expectedValue(samples=[],probabilities=this.normalDistribution(samples)) //get expected value of an array
+ * originMoment(samples=[],probabilities=this.normalDistribution(samples),order=1) //statistical moment about origin
+ * centralMoment(samples=[],probabilities=this.normalDistribution(samples),order=1) //statistical moment about mean
+ * linearDiscriminantAnalysis(samples=[], classifier=[]) //LDA
+ * conv1D(arr=[],kern=[],pad=0) //1d convolution //1d convolution
+ * conv2D(mat=[[],[],[]],kern=[[],[],[]],pad=0) //2d convolution
+ * cov2d(mat) //2d covariance
+ * cov1d(arr1=[],arr2=[]) //1d covariance
+ * cov3d(x=[],y=[],z=[]) //3d covariance
+ * covNd(dimensionalData=[]) //nd covariance
+ * eigens2x2(mat=[[1,2],[3,4]]) //fast 2x2 eigenvalue 
+ * eigenvectors2x2(mat=[[1,2],[3,4]], eigens=[1,2]) //fast 2x2 eigenvector 
+ * fastpca2d(xarr,yarr) //fast 2d pca
+ * crosscorrelation(arr1,arr2) //crosscor
+ * autocorrelation(arr1) //autocor
+ * correlograms(dat=[[],[]]) //return cross correlations of many signals
+ * sma(arr=[], window) //simple moving average 
+ * sum(arr=[]) //array sum
+ * reduceArrByFactor(arr,factor=2) //reduce array sizes
+ * makeArr(startValue, stopValue, nSteps) //linspace
+ * interpolateArray(data, fitCount, scalar=1) 
+ * isExtrema(arr,critical='peak') //peak or valley
+ * isCriticalPoint(arr,critical='peak') //peak, valley
+ * peakDetect = (smoothedArray,type='peak',window=49) //wider window to find less peaks
+ * getPeakThreshold(arr, peakIndices, thresholdVar)
+ * 
+ * eigens(M=[[],[]], tolerance=0.0001, max_iterations=1000)
+ * pca(mat=[[],[]],tolerance = 0.00001) //power iteration method PCA
+ * eigenvalue_of_vector(mat, eigenvector)
+ * power_iteration(mat, tolerance=0.00001, max_iterations=1000)
+ * squared_difference(v1, v2)
+ * flatten_vector(v) //column to row
+ * column(mat, x) //row to column
+ * 
+ */
+
+
+
+class Math2 {
+	constructor() {
+
+	}
+
+	//----------------------------------------------------------------
+	//-------------------- Static Variables---------------------------
+	//----------------------------------------------------------------
+
+	//Throwing a bunch in here for the hell of it
+	static TWO_PI = Math.PI*2; 			//2PI
+	static C = 299792458; 				//speed of light m/s
+	static G = 6.67430e-11; 			//Newton's gravitation constant N*m^2 / kg^2
+	static h = 6.62607015e-34; 			//Planck constant J*s
+	static R = 8.31432e3; 				//Universal gas constant J / kg*mol*K
+	static Ra = 287; 					//Air gas constant J / kg*K
+	static H = 69.3; 					//Hubble constant km/s/Mpc 
+	static kbar = 1.054571817e-34; 		//Dirac constant J*s
+	static kB = 1.380649e-23; 			//Boltzmann constant J/K
+	static ke = 8.9875517923e9; 		//Coulomb constant kg * m^3 * s^-2 * C^-2
+	static me = 9.1093837015e-31; 		//electron mass kg
+	static mp = 1.67262192369e-27; 		//proton mass kg
+	static mn =	1.67492749804e-27; 		//neutron mass kg
+	static P0 = 1.01325e5; 				//Sea level pressure N/m^2
+	static T0 = 288.15; 				//Sea level room temperature K
+	static p0 = 1.225; 					//Sea level air density kg/m^3
+	static Na = 6.0220978e23; 			//Avogadro's number 1 / kg*mol
+	static y = 1.405; 					//Adiabatic constant
+	static M0 = 28.96643; 				//Sea level molecular weight
+	static g0 = 9.80665; 				//Sea level gravity m/s^2
+	static Re = 6.3781e6; 				//Earth radius m
+	static B = 1.458e-6; 				//Thermal constant Kg / m*s*sqrt(kg)
+	static S = 110.4; 					//Sutherland's constant K
+	static Sigma = 3.65e-10; 			//Collision diameter of air m
+
+	static imgkernels = {
+		edgeDetection: [
+		  [-1, -1, -1],
+		  [-1,  8, -1],
+		  [-1, -1, -1]
+		], boxBlur: [
+		  [1/9, 1/9, 1/9],
+		  [1/9, 1/9, 1/9],
+		  [1/9, 1/9, 1/9]
+		], sobelLeft: [
+		  [1,  0, -1],
+		  [2,  0, -2],
+		  [1,  0, -1]
+		], sobelRight: [
+		  [-1, 0, 1],
+		  [-2, 0, 2],
+		  [-1, 0, 1]
+		], sobelTop: [
+		  [1,  2,   1],
+		  [0,  0,   0],
+		  [-1, -2, -1] 
+		], sobelBottom: [
+		  [-1, 2, 1],
+		  [0,  0, 0],
+		  [1,  2, 1]
+		], identity: [
+		  [0, 0, 0],
+		  [0, 1, 0], 
+		  [0, 0, 0]
+		], gaussian3x3: [
+		  [1,  2,  1],
+		  [2,  4,  2], 
+		  [1,  2,  1]
+		], guassian7x7: [
+		  [0, 0,  0,   5,   0,   0,  0],
+		  [0, 5,  18,  32,  18,  5,  0],
+		  [0, 18, 64,  100, 64,  18, 0],
+		  [5, 32, 100, 100, 100, 32, 5],
+		  [0, 18, 64,  100, 64,  18, 0],
+		  [0, 5,  18,  32,  18,  5,  0],
+		  [0, 0,  0,   5,   0,   0,  0],
+		], emboss: [
+		  [-2, -1,  0],
+		  [-1,  1,  1], 
+		  [ 0,  1,  2]
+		], sharpen: [
+		  [0, -1,   0],
+		  [-1,  5, -1],
+		  [0, -1,   0]
+		]
+	  };
+
+	//----------------------------------------------------------------
+	//-------------------- Static Functions --------------------------
+	//----------------------------------------------------------------
+
+	//Generate sinewave, you can add a noise frequency in too. Array length will be Math.ceil(fs*nSec)
+	static genSineWave(freq=20,peakAmp=1,nSec=1,fs=512,freq2=0,peakAmp2=1){
+		var sineWave = [];
+		var t = [];
+		var increment = 1/fs; //x-axis time increment based on sample rate
+		for (var ti = 0; ti < nSec; ti+=increment){
+			var amplitude = Math.sin(2*Math.PI*freq*ti)*peakAmp;
+			amplitude += Math.sin(2*Math.PI*freq2*ti)*peakAmp2; //Add interference
+			sineWave.push(amplitude);
+			t.push(ti);
+		}
+		return [t,sineWave]; // [[times],[amplitudes]]
+	}
+
+	//get the sine amplitude at a particular time (seconds)
+	static getSineAmplitude(frequency=20,peakAmplitude=1,ti=0, tOffset=0) {
+		return Math.sin(this.TWO_PI*frequency*ti+tOffset)*peakAmplitude;
+	}
+
+	//average value of array
+	static mean(arr){
+		var sum = arr.reduce((prev,curr)=> curr += prev);
+		return sum / arr.length;
+	}
+
+	//array mode (most commonly occurring number)
+	static mode(arr){
+		return arr.sort((a,b) =>
+			  arr.filter(v => v===a).length
+			- arr.filter(v => v===b).length
+		).pop();
+	}
+
+	//standard deviation
+	static std(arr,mean=undefined){
+		let avg = mean; 
+		if(!mean) avg = this.mean(arr);
+		let summed = 0;
+		for(let i = 0; i<arr.length; i++) {
+			let subbed = arr[i] - avg;
+			summed += subbed*subbed;
+		}
+		
+		return Math.sqrt(summed/arr.length);
+	}
+
+	//find the relative error of predicted results
+	static relError(actual=[],forecast=[],abs=true) {
+		if(actual.length !== forecast.length) throw new Error('Input arrays of same length!');
+		let i = actual.length;
+		let d = []; //relative errors
+		for(let j = 0; j<i; j++) {
+			let dd = (actual[j] - forecast[j])/actual[j];
+			if(abs) dd = Math.abs(dd);
+			d.push(dd);
+		}
+		return d;
+	}
+
+	//returns information entropy in natural units (base e)
+	static informationEntropy(probabilities=[]) {
+		let entropy = [];
+		let len = probabilities.length;
+		for(let i = 0; i < len; i++) {
+			let ent = probabilities[i]*Math.log(probabilities[i]);
+			if(isNaN(ent)) ent = 0;
+			entropy.push(ent);
+		}
+
+		return entropy;
+	}
+
+	//array zscore (probabilities)
+	static zscore(arr){
+		let mean = this.mean(arr);
+		let std = this.std(arr,mean);
+		let z = [];
+		for (let i = 0; i<arr.length; i++) {
+			z.push((arr[i]-mean) / std);
+		}
+
+		return z;
+	}
+
+	static variance(arr) { //Variance of 1D input arrays of length n
+		var mean = this.mean(arr);
+		return arr.reduce((a,b) => a + ((b - mean)**2), 0)/arr.length;
+	}
+
+	static dot(vec1,vec2) { //nDimensional vector dot product
+        var dot=0;
+        for(var i=0; i<vec1.length; i++) {
+            dot += vec1[i]*vec2[i];
+        }
+		return dot;
     }
 
-    return false;
-  }
-
-  async runCallback(functionName, args = [], origin) {
-    let output = undefined;
-    let callback = this.callbacks.get(functionName);
-
-    if (callback) {
-      output = await callback(this, args, origin);
+    static cross3D(vec1,vec2) { //3D vector cross product
+        return [
+            vec1[1]*vec2[2]-vec1[2]*vec2[1], //x
+            vec1[2]*vec2[0]-vec1[0]*vec2[2], //y
+            vec1[0]*vec2[1]-vec1[1]*vec2[0]  //z
+		];
     }
 
-    return output;
-  }
-
-  checkEvents(functionName, origin) {
-    let found = this.EVENTSETTINGS.find(o => {
-      if (o.origin && origin && o.case && functionName) {
-        if (o.origin === origin && o.case === functionName) return true;else return false;
-      } else if (o.case && functionName) {
-        if (o.case === functionName) return true;else return false;
-      } else if (o.origin && origin) {
-        if (o.origin === origin) return true;else return false;
-      } else return false;
-    }); //console.log(functionName,origin,found)
-
-    return found;
-  }
-
-  async checkCallbacks(event) {
-    //console.log(event);
-    let output = undefined;
-    if (!event.data) return output;
-    let callback; //different function name properties just for different sensibilities
-
-    if (event.data.case) callback = this.callbacks.get(event.data.case);else if (event.data.foo) callback = this.callbacks.get(event.data.foo);else if (event.data.command) callback = this.callbacks.get(event.data.command);else if (event.data.cmd) callback = this.callbacks.get(event.data.cmd);
-
-    if (callback) {
-      if (event.data.input) output = await callback(this, event.data.input, event.data.origin);else if (event.data.args) output = await callback(this, event.data.args, event.data.origin);else output = await callback(this, undefined, event.data.origin); //no inputs
+    static magnitude(vec) { //nDimensional magnitude
+        var sqrd = 0;
+        vec.forEach((c) => {
+            sqrd+=c*c;
+        })
+        return Math.sqrt(sqrd)
     }
 
-    return output;
-  }
+    static distance(point1, point2) { //nDimensional vector distance function
+        var dsqrd = 0;
+        point1.forEach((c,i) => {
+            dsqrd += (point2[i] - c)*(point2[i] - c);
+        })
+        return Math.sqrt(dsqrd);
+    }
+	static normalize(vec) { //nDimensional vector normalization
+        var norm = 0;
+        norm = this.magnitude(vec);
+        var vecn = [];
+        vec.forEach((c,i) => {
+            vecn.push(c*norm);
+        })
+        return vecn;
+    }
+
+	//return the quadratic roots based on your input ax^2 + bx + c = 0
+	static quadraticFormula(a,b,c) {
+		let bbmac4 = Math.sqrt(b*b-4*a*c);
+		if(!isNaN(bbmac4)) return ['complex','complex'];
+		let _a2 = 1/(2*a);
+		if(bbmac4 === 0) return [b*_a2];
+		let nb = -b;
+		return [(nb + bbmac4)*_a2,((nb - bbmac4)*_a2)];
+	}
+
+	//approximation of function roots. Provide a function (1d), window, and precision and it will return approximate roots along that window
+	static newtonsMethod(foo=(x)=>{return Math.pow(x,5) + x*x - x - 0.2}, start=0,end=1, precision=0.01, attempts=10) {
+		let roots = [];
+
+		for(let i = 0; i < attempts; i++) {
+			let seedx = Math.random()*(end-start);	
+			let guess = foo(seedx);
+			let guess2 = foo(seedx + precision);
+			let slope = (guess2 - guess)/precision;
+
+			let xn = seedx+precision;
+			while((Math.abs(slope) > precision)) {
+				let step = -guess/slope;
+				let xn1 = xn+step;
+				guess = guess2;
+				guess2 = foo(xn1);
+				let slope = (guess2 - guess)/(xn1-xn);
+			}
+
+			let idx;
+			let f = roots.find((root,i) => {
+				if(Math.abs(xn1 - root) < precision) {
+					idx = i;
+					return true;
+				}
+			});
+			if(f) roots[idx] = (xn1 + f)*0.5;
+			else roots.push(xn1);
+		}
+		return roots;
+	}
+
+	//2D integral approximation using rectangular area under the curve. If you need absolute values be sure to return that.
+    static integral = (func=(x)=>{ let y=x; return y;}, range=[], stepx=0.01) => {
+        let area = 0;
+        for(let i = range[0]; i<range[1]; i+=stepx) {
+            let y=func(i);
+            area += y*stepx;
+        }
+        return area;
+    }
+
+    //3D double integral approximation
+    static dintegral = (func=(x,y)=>{ let z = x+y; return z;}, range=[[],[]], stepx=0.01,stepy=stepx) => {
+        let volume = 0;
+        for(let i = range[0][0]+stepx; i<range[0][1]; i+=stepx) {
+            for(let j = range[1][0]+stepy; j<range[1][1]; j+=stepy) {
+                let z=func(i,j);
+                volume += z*stepx*stepy;
+            }
+        }
+        return volume;
+    }
+
+    //4D triple integral approximation
+    static tintegral = (func=(x,y,z)=>{ let w=x+y+z; return w;}, range=[[],[],[]], stepx=0.01, stepy=stepx, stepz=stepx) => {
+        let volume = 0;
+        for(let i = range[0][0]+stepx; i<range[0][1]; i+=stepx) {
+            for(let j = range[1][0]+stepy; j<range[1][1]; j+=stepy) {
+                for(let k = range[2][0]+stepz; k<range[2][1]; k+=stepz) {
+                    let w=func(i,j,k);
+                    volume += w*stepx*stepy*stepz;
+                }
+            }
+        }
+        return volume;
+    }
+
+    //2D path integral approximation (the length of a curve)
+    static pintegral = (func=(x)=>{ let y=x; return y; }, range=[], stepx=0.01) => {
+        let length = 0;
+        let y0 = undefined;
+        let yi = undefined;
+        for(let i = range[0]; i<range[1]; i+=stepx) {
+            y0 = yi;
+            yi = func(i);
+            if(y0)
+                length += this.distance([0,y0],[stepx,yi]);
+        }
+        return length;
+    }
+
+    static makeVec(point1,point2) {  //Make vector from two nDimensional points (arrays)
+        var vec = [];
+        point1.forEach((c,i) => {
+            vec.push(point2[i]-c);
+        })
+        return vec;
+    }
+
+	static transpose(mat){
+		return mat[0].map((_, colIndex) => mat.map(row => row[colIndex]));
+	}
+
+	//2D Matrix multiplication from: https://stackoverflow.com/questions/27205018/multiply-2-matrices-in-javascript
+	static matmul(a, b) {
+		var aNumRows = a.length, aNumCols = a[0].length,
+			bNumRows = b.length, bNumCols = b[0].length,
+			m = new Array(aNumRows);  // initialize array of rows
+		for (var r = 0; r < aNumRows; ++r) {
+		  m[r] = new Array(bNumCols); // initialize the current row
+		  for (var c = 0; c < bNumCols; ++c) {
+			m[r][c] = 0;             // initialize the current cell
+			for (var i = 0; i < aNumCols; ++i) {
+			  m[r][c] += a[r][i] * b[i][c];
+			}
+		  }
+		}
+		return m;
+	}
+
+	//Apply scalar to 2D matrix 
+	static matscale(mat,scalar) {
+		let m = [];
+		for (var i = 0; i < mat.length; i++) {
+			m[i] = [];
+			for (let j = 0; j < mat[0].length; j++) {
+				m[i][j] = mat[i][j] * scalar;
+			}
+		}
+		return m;
+	}
+
+	//2d matrix addition
+	static matadd(a,b) {
+		let m = [];
+		for (let i = 0; i < a.length; i++) {
+			m[i] = [];
+			for (var j = 0; j < a[0].length; j++) {
+				m[i][j] = a[i][j] + b[i][j];
+			}
+		}
+		return m;
+	}
+
+	//2d matrix subtraction
+	static matsub(a,b) {
+		let m = [];
+		for (let i = 0; i < a.length; i++) {
+			m[i] = [];
+			for (var j = 0; j < a[0].length; j++) {
+				m[i][j] = a[i][j] - b[i][j];
+			}
+		}
+		return m;
+	}
+
+	//return a histogram of the array, use nBins to override binSize
+	static histogram(arr=[], binSize=1, nBins=undefined) {  
+		let copy = [...arr]; 
+		copy.sort(function(a, b){return a - b}); //ascending sort
+		let binStart = Math.min(...copy);
+		if(typeof nBins === 'number') {
+			let binEnd = Math.max(...copy);
+			binSize = Math.abs((binEnd - binStart) / (nBins-1));
+		} 
+		let j = binStart;
+		let binx = [];
+		let biny = [];
+		for(let i = 0; i < copy.length; i++) {
+			let binidx = binSize*j;
+			if(copy[i] > binStart+binidx) { 
+				j++; 
+				binidx+=binSize; 
+				let binmin = binStart+binidx;
+				let binmid = binmin + binidx*0.5;
+				binx.push(binmid);
+				biny.push(0);
+			}
+			biny[biny.length-1]++;
+		}
+
+		return [binx,biny];
+	}
+
+
+	//Get probability densities for the samples, set a cutoff to avoid obscenely small numbers
+	static normalDistribution(samples=[], normalize=true, cutoff = 0.0001) {
+		let m = this.mean(samples);
+		let vari = this.variance(samples);
+		let nSamples = samples.length;
+
+		let probabilities = [];
+
+		let denom = 1/(this.TWO_PI*vari);
+		let _variance = 1/vari;
+		let sum = 0; //for normalization
+		for (let i = 0; i < nSamples; i++) {
+			let px = Math.exp(-0.5*Math.pow((samples[i]-m)*_variance,2))*denom
+			if(px < cutoff) px = 0;
+			probabilities.push(px);
+			sum += px;
+		}
+		if(normalize) {
+			let _sum = 1/sum;
+			probabilities = probabilities.map(x => x*_sum);
+		}
+	
+		return probabilities;
+	}
+
+	static expectedValue(samples=[],probabilities=this.normalDistribution(samples)) {
+		return samples.reduce((sum,item,idx) => sum + item*probabilities[idx]);
+	}
+
+	//moment about the origin (statistics)
+	static originMoment(samples=[],probabilities=this.normalDistribution(samples),order=1) {
+		return samples.reduce((sum,item,idx) => sum + Math.pow(item,order)*probabilities[idx]);
+	}
+
+	//moment about the population mean (statistics)
+	static centralMoment(samples=[],probabilities=this.normalDistribution(samples),order=1) {
+		let m = this.mean(samples);
+		return samples.reduce((sum,item,idx) => sum + Math.pow((item-m),order)*probabilities[idx]/samples.length);
+	}
+
+	static linearDiscriminantAnalysis(samples=[], classifier=[]) {
+		let mean = this.mean(samples);
+		let meank = this.mean(classifier);
+		let covariance = this.cov1d(samples,classifier);
+		let probs = this.normalDistribution(samples);
+
+		let dk = [];
+		for(let i = 0; i < samples.length; i++){ 
+			dk.push(x[i]*covariance*meank - .5*mean*covariance*meank + Math.log10(probs[i]));
+		}
+
+		return dk;
+	}
+
+	//1D convolution (filtering)
+	static conv1D(arr=[],kern=[1/3,1/3,1/3],pad=Math.floor(kern.length*0.5)) {
+		let result = [];
+		let _n = 1/kern.length;
+
+		if(pad > 0) {
+			let pads = new Array(pad).fill(0);
+			arr = [...pads,...arr,...pads];
+		}
+
+		let start = Math.floor(kern.length*0.5); //offset since kernel will reduce size of array
+		let end = arr.length - kern.length + start; //end index
+
+		for(let i = start; i < end; i++) {
+			let acc = 0;
+			for(let j = 0; j < kern.length; j++) {
+				acc += arr[i-start] * kern[j];
+			}
+			result.push(acc* _n);
+		}
+
+		return result;
+	}	
+
+	//2D convolution (filtering), input 2d mat and 2d kernel 
+	static conv2D(mat=[[],[],[]],kern=[[],[],[]],pad=0) {
+		let result = new Array(mat.length - Math.ceil(kern.length*0.5)).fill([]);
+		
+		let mat_t;
+		let kern_t = Math2.transpose(kern_t);
+
+		if(pad > 0) {
+			let pads = new Array(pad).fill(0);
+
+			//transpose to col/row
+			mat_t = Math2.transpose(mat); //hard copy
+			for(let i = 0; i < mat_t.length; i++) {
+				mat_t[i] = [...pads,...mat_t[i],...pads];
+			}
+
+			//transpose back
+			mat = Math2.transpose(mat_t);
+			for(let j = 0; j < mat.length; j++) {
+				mat[j] = [...pads,...mat[j],...pads];
+			}
+ 
+		}
+
+		
+		let startr = Math.floor(kern[0].length*0.5); //offset since kernel will reduce size of array
+		let startl = Math.floor(kern_t[0].length*0.5); //offset since kernel will reduce size of array
+
+		let endr = mat[0].length - kern[0].length + startr; //row end
+		let endl = mat_t[0].length - kern_t[0].length + startl; //column end
+
+		let _n = 1/(kern[0].length*kern_t[0].length);
+
+		let iters = endr*endl; //number of convolutions to perform
+
+		let i = startr;
+		let x; let y=startl;
+		while(i < iters) {
+			let acc = 0;
+			x = i % mat[0].length;
+			if(x === 0) {
+				y++;
+			}
+
+			for(let j = 0; j < kern[0].length; j++) {
+				for(let k = 0; k < kern_t[0].length; j++) {
+					acc += mat[y-startl+k][x-startr+j] * kern[k][j];
+				}
+
+				result[y].push(acc*_n);
+			}
+			
+			i++;
+		}
+		
+		return result;
+
+	}	
+
+	//2D matrix covariance (e.g. for lists of signals). Pretty fast!!!
+	static cov2d(mat) { //[[x,y,z,w],[x,y,z,w],...] input list of vectors of the same length
+		//Get variance of rows and columns
+		//console.time("cov2d");
+		var mattransposed = this.transpose(mat);
+		//console.log(mattransposed)
+		var matproducts = [];
+
+		var rowmeans = [];
+		var colmeans = [];
+
+		mat.forEach((row, idx) => {
+			rowmeans.push(this.mean(row));
+		});
+
+		mattransposed.forEach((col,idx) => {
+			colmeans.push(this.mean(col));
+		});
+
+		mat.forEach((row,idx) => {
+			matproducts.push([]);
+			for(var col = 0; col < row.length; col++){
+				matproducts[idx].push((mat[idx][col]-rowmeans[idx])*(mat[idx][col]-colmeans[col])/(row.length - 1));
+			}
+		});
+
+		/*
+			mat[y][x] = (x - rowAvg)*(x - colAvg) / (mat[y].length - 1);
+		*/
+
+		//console.log(matproducts);
+		//Transpose matrix
+		var matproductstransposed = this.transpose(matproducts);
+
+		//Matrix multiplication, stolen from: https://stackoverflow.com/questions/27205018/multiply-2-matrices-in-javascript
+		var aNumRows = matproducts.length, aNumCols = matproducts[0].length,
+			bNumRows = matproductstransposed.length, bNumCols = matproductstransposed[0].length,
+			m = new Array(aNumRows);  // initialize array of rows
+		for (var r = 0; r < aNumRows; ++r) {
+		  m[r] = new Array(bNumCols); // initialize the current row
+		  for (var c = 0; c < bNumCols; ++c) {
+			m[r][c] = 0;             // initialize the current cell
+			for (var i = 0; i < aNumCols; ++i) {
+			  m[r][c] += matproducts[r][i] * matproductstransposed[i][c] / (mat[0].length - 1); //divide by row length - 1
+			}
+		  }
+		}
+		//console.timeEnd("cov2d");
+		return m; //Covariance matrix
+	}
+
+
+	//Covariance between two 1D arrays
+	static cov1d(arr1=[],arr2=[]) {
+		return this.cov2d([arr1,arr2]);
+	}
+
+	//3d covariance
+	static cov3d(x=[],y=[],z=[]) {
+		return [
+			[this.cov1d(x,x),this.cov1d(x,y),this.cov1d(x,z)],
+			[this.cov1d(y,x),this.cov1d(y,y),this.cov1d(y,z)],
+			[this.cov1d(z,x),this.cov1d(z,y),this.cov1d(z,z)]
+		];
+	}
+
+	//n-dimensional covariance matrix
+	static covNd(dimensionalData=[]) {
+		let covariance = [];
+		dimensionalData.forEach((arr,i)=>{
+			covariance.push([]);
+			dimensionalData.forEach((arr2,j)=>{
+				covariance[i].push(this.cov1d(arr,arr2));
+			});
+		});
+	}
+
+	//fast 2x2 eigenvalue calculator: https://www.youtube.com/watch?v=e50Bj7jn9IQ
+	static eigens2x2(mat=[[1,2],[3,4]]) {
+		let det = mat[0][0]*mat[1][1] - mat[0][1]*mat[1][0];
+		let mean = (mat[0][0]+mat[1][1])*.5;
+
+		let sqrt = Math.sqrt(mean*mean - det);
+		let eig1 = mean + sqrt;
+		let eig2 = mean - sqrt;
+
+		return [eig1, eig2];
+	}
+
+	//http://math.colgate.edu/~wweckesser/math312Spring06/handouts/IMM_2x2linalg.pdf
+	static eigenvectors2x2(mat=[[1,2],[3,4]], eigens=[1,2]) {
+		let v1 = [-mat[0][1], mat[0][0]-eigens[0]];
+		if(v1[0] === 0 && v1[1] === 0) {
+			v1[0] = mat[1][1]-eigens[0];
+			v1[1] = -mat[1][0];
+		}
+		let v2 = [-mat[0][1], mat[0][0]-eigens[1]];
+		if(v2[0] === 0 && v2[1] === 0) {
+			v2[0] = mat[1][1]-eigens[1];
+			v2[1] = -mat[1][0];
+		}
+		return [v1, v2];
+	}
+
+	//Fast PCA for 2D datasets https://towardsdatascience.com/a-one-stop-shop-for-principal-component-analysis-5582fb7e0a9c
+	static fastpca2d(xarr,yarr){
+		let cov1d = this.cov1d(xarr,yarr); //yields a 2x2 matrix
+		let eigs = this.eigens2x2(cov1d);
+		if(eigs[1] > eigs[0]) eigs.reverse();
+		let evs = this.eigenvectors2x2(cov1d,eigs);
+
+		console.log(eigs,evs)
+		return [eigs,evs];
+	}
+
+	//Simple cross correlation.
+	static crosscorrelation(arr1,arr2) {
+
+		//console.time("crosscorrelation");
+		var arr2buf = [...arr2,...Array(arr2.length).fill(0)];
+		var mean1 = this.mean(arr1);
+		var mean2 = this.mean(arr2);
+
+		//Estimators
+		var arr1Est = arr1.reduce((sum,item) => sum += Math.pow(item-mean1,2));
+		arr1Est = Math.sqrt(arr1Est);
+		var arr2Est = arr2.reduce((sum,item) => sum += Math.pow(item-mean1,2));
+		arr2Est = Math.sqrt(arr2Est);
+
+		var _arrEstsMul = 1/(arr1Est * arr2Est);
+		var correlations = new Array(arr1.length).fill(0);
+
+		for(var delay = 0; delay < arr1.length; delay++) {
+			var r = arr1.reduce((sum,item,i) => sum += (item - mean1)*(arr2buf[delay+i]-mean2));
+			correlations[delay] = r*_arrEstsMul;
+		}
+
+		//console.timeEnd("crosscorrelation");
+		return correlations;
+	}
+
+	//Simple autocorrelation. Better method for long series: FFT[x1] .* FFT[x2]
+	static autocorrelation(arr1) {
+		var delaybuf = [...arr1,...Array(arr1.length).fill(0)];
+		var mean1 = this.mean(arr1);
+
+		//Estimators
+		var arr1Est = arr1.reduce((sum,item) => sum += Math.pow(item-mean1,2));
+		arr1Est = Math.sqrt(arr1Est);
+
+		var _arr1estsqrd = 1/(arr1Est * arr1Est);
+		var correlations = new Array(arr1.length).fill(0);
+
+		for(var delay = 0; delay < arr1.length; delay++) {
+			var r = arr1.reduce((sum,item,i) => sum += (item - mean1)*(delaybuf[delay+i]-mean1));
+			correlations[delay] = r*_arr1estsqrd;
+		}
+
+		return correlations;
+	}
+
+	//Compute correlograms of the given array of arrays (of equal length). Input array of equal length arrays of latest raw data (use dat = eeg32instance.getTaggedRawData())
+	static correlograms(dat=[[],[]]) {//Coherence network math for data pushed to the atlas
+		var correlograms = []; //auto and cross correlations for each channel
+		dat.forEach((row1,i) => {
+			dat.forEach((row2,j) => {
+				if(j >= i) {
+					correlograms.push(Math2.crosscorrelation(row1,row2));
+				}
+			})
+		});
+		return correlograms; //Output ordered like (tag1:tag1, tag1:tag2 ... tag2:tag2, tag2:tag3 ... tagn:tagn) where autocorrelograms are also included
+	}
+
+	//Input data and averaging window, output array of moving averages (should be same size as input array, initial values not fully averaged due to window)
+	static sma(arr=[], window) {
+		var smaArr = []; //console.log(arr);
+		for(var i = 0; i < arr.length; i++) {
+			if((i == 0)) {
+				smaArr.push(arr[0]);
+			}
+			else if(i < window) { //average partial window (prevents delays on screen)
+				var arrslice = arr.slice(0,i+1);
+				smaArr.push(arrslice.reduce((previous,current) => current += previous ) / (i+1));
+			}
+			else { //average windows
+				var arrslice = arr.slice(i-window,i);
+				smaArr.push(arrslice.reduce((previous,current) => current += previous) / window);
+			}
+		}
+		//console.log(temp);
+		return smaArr;
+	}
+
+	static sum(arr=[]){
+		if (arr.length > 0){
+			var sum = arr.reduce((prev,curr)=> curr += prev);
+		return sum;
+		} else {
+			return 0;
+		}
+	}
+
+	static reduceArrByFactor(arr,factor=2) { //faster than interpolating
+        let x = arr.filter((element, index) => {
+            return index % factor === 0;
+        });
+        return x;
+    }
+
+	//Make an array of size n from a to b 
+    static makeArr(startValue, stopValue, nSteps) {
+        var arr = [];
+        var step = (stopValue - startValue) / (nSteps - 1);
+        for (var i = 0; i < nSteps; i++) {
+          arr.push(startValue + (step * i));
+        }
+        return arr;
+    }
+
+	//Linear interpolation from https://stackoverflow.com/questions/26941168/javascript-interpolate-an-array-of-numbers. Input array and number of samples to fit the data to
+	static interpolateArray(data, fitCount, scalar=1) {
+
+		var linearInterpolate = function (before, after, atPoint) {
+			return (before + (after - before) * atPoint)*scalar;
+		};
+
+		var newData = new Array();
+		var springFactor = new Number((data.length - 1) / (fitCount - 1));
+		newData[0] = data[0]; // for new allocation
+		for ( var i = 1; i < fitCount - 1; i++) {
+			var tmp = i * springFactor;
+			var before = new Number(Math.floor(tmp)).toFixed();
+			var after = new Number(Math.ceil(tmp)).toFixed();
+			var atPoint = tmp - before;
+			newData[i] = linearInterpolate(data[before], data[after], atPoint);
+		}
+		newData[fitCount - 1] = data[data.length - 1]; // for new allocation
+		return newData;
+	};
+
+	static isExtrema(arr,critical='peak') { //Checks if the middle point of the (odd-numbered) array is a local extrema. options: 'peak','valley','tangent'. Even numbered arrays are popped
+        let ref = [...arr];
+		if(ref.length%2 === 0) ref.pop();
+        if(arr.length > 1) { 
+            let pass = true;
+            for(let i = 0; i < ref.length; i++) {
+                let val = ref[i];
+                if(critical === 'peak') { //search first derivative
+                    if(i < Math.floor(ref.length*.5) && val >= ref[Math.floor(ref.length*.5)] ) {
+                        pass = false;
+                        break;
+                    } else if (i > Math.floor(ref.length*.5) && val >= ref[Math.floor(ref.length*.5)]) {
+                        pass = false;
+                        break;
+                    }
+                } else if (critical === 'valley') { //search first derivative
+                    if(i < Math.floor(ref.length*.5) && val <= ref[Math.floor(ref.length*.5)] ) {
+                        pass = false;
+                        break;
+                    } else if (i > Math.floor(ref.length*.5) && val <= ref[Math.floor(ref.length*.5)]) {
+                        pass = false;
+                        break;
+                    }
+                } else { //look for tangents (best with 2nd derivative usually)
+                    if((i < Math.floor(ref.length*.5) && val <= ref[Math.floor(ref.length*.5)] )) {
+                        pass = false;
+                        break;
+                    } else if ((i > Math.floor(ref.length*.5) && val <= ref[Math.floor(ref.length*.5)])) {
+                        pass = false;
+                        break;
+                    }
+                } //|| (i < ref.length*.5 && val <= 0 ) || (i > ref.length*.5 && val > 0)
+            }
+            if(critical !== 'peak' && critical !== 'valley' && pass === false) {
+                pass = true;
+                for(let i = 0; i < ref.length; i++) {
+                    let val = ref[i];
+                    if((i <  Math.floor(ref.length*.5) && val >= ref[Math.floor(ref.length*.5)] )) {
+                        pass = false;
+                        break;
+                    } else if ((i >  Math.floor(ref.length*.5) && val >= ref[Math.floor(ref.length*.5)])) {
+                        pass = false;
+                        break;
+                    }
+                }
+            }
+            return pass;
+        } else return undefined;
+    }
+
+    static isCriticalPoint(arr,critical='peak') { //Checks if the middle point of the (odd-numbered) array is a critical point. options: 'peak','valley','tangent'. Even numbered arrays are popped
+        let ref = [...arr];
+		if(ref.length%2 === 0) ref.pop();
+        if(arr.length > 1) { 
+            let pass = true;
+            for(let i = 0; i < ref.length; i++) {
+                let val = ref[i];
+                if(critical === 'peak') { //search first derivative
+                    if(i < ref.length*.5 && val <= 0 ) {
+                        pass = false;
+                        break;
+                    } else if (i > ref.length*.5 && val > 0) {
+                        pass = false;
+                        break;
+                    }
+                } else if (critical === 'valley') { //search first derivative
+                    if(i < ref.length*.5 && val >= 0 ) {
+                        pass = false;
+                        break;
+                    } else if (i > ref.length*.5 && val < 0) {
+                        pass = false;
+                        break;
+                    }
+                } else { //look for tangents (best with 2nd derivative usually)
+                    if((i < ref.length*.5 && val >= 0 )) {
+                        pass = false;
+                        break;
+                    } else if ((i > ref.length*.5 && val < 0)) {
+                        pass = false;
+                        break;
+                    }
+                }
+            }
+            if(critical !== 'peak' && critical !== 'valley' && pass === false) {
+                pass = true;
+                for(let i = 0; i < ref.length; i++) {
+                    let val = ref[i];
+                    if((i < ref.length*.5 && val <= 0 )) {
+                        pass = false;
+                        break;
+                    } else if ((i > ref.length*.5 && val > 0)) {
+                        pass = false;
+                        break;
+                    }
+                }
+            }
+            return pass;
+        } else return undefined;
+    }
+
+	//returns array of indices of detected peaks/valleys
+    static peakDetect = (smoothedArray,type='peak',window=49) => {
+        let mid = Math.floor(window*.5);
+        let peaks = [];
+        //console.log(smoothedArray.length-window)
+        for(let i = 0; i<smoothedArray.length-window; i++) {
+            let isPeak = this.isExtrema(smoothedArray.slice(i,i+window),type);
+            if(isPeak) {
+                peaks.push(i+mid-1);
+            }
+        }
+        return peaks;
+    }
+
+	//gets a mean threshold based on peaks in an array
+    static getPeakThreshold(arr,peakIndices, thresholdVar) {
+        let threshold;
+        let filtered = arr.filter((o,i)=>{if(peakIndices.indexOf(i)>-1) return true;});
+        if(thresholdVar === 0) {
+            threshold = this.mean(filtered); 
+        } else threshold = (thresholdVar+this.mean(filtered))*0.5;  
+        
+        return threshold;
+    }
+
+	//-------------------------------------------------------------
+
+
+
+	//The following n-dimensional Eigenvalue/PCA Math was adapted from: https://github.com/johnmihalik/eigenvector/blob/master/pca.js
+	static column(mat, x) {
+		let col = new Array(mat.length).fill(0).map(() => new Array(1).fill(0));
+		for (let i = 0; i < mat.length; i ++) {
+			col[i][0] = mat[i][x];
+		}
+		return col;
+	}
+
+	//flatten a vector of 1-value vectors
+	static flatten_vector(v) {
+		let v_new = [];
+		for (let i = 0; i < v.length; i++) {
+			v_new[i] = v[i][0];
+		}
+		return v_new;
+	}
+
+	static squared_difference(v1, v2) {
+		let sum = 0.0;
+		for (let i = 0; i < v1.length; i ++) {
+			sum = sum + Math.pow( v1[i] - v2[i], 2 );
+		}
+		return sum;
+	}
+
+	// See: https://math.stackexchange.com/questions/768882/power-method-for-finding-all-eigenvectors
+	static shift_deflate(mat, eigenvalue, eigenvector)  {
+		let len = Math.sqrt( this.matmul(this.transpose(eigenvector), eigenvector)  );
+		let U = this.matscale(eigenvector, 1.0/len);
+		let delta = this.matscale( this.matmul(U, this.transpose(U)) , eigenvalue);
+		let M_new = this.matsub(mat, delta);
+		return M_new;
+	}
+
+	static eigenvalue_of_vector(mat, eigenvector) {
+		// Xt * M * x
+		ev = this.matmul( this.matmul(this.transpose(eigenvector), mat ), eigenvector);
+		return ev;
+	}
+
+	//Input square 2D matrix
+	static power_iteration(mat, tolerance=0.00001, max_iterations=1000) {
+
+		let rank = mat.length;
+	
+		// Initialize the first guess pf the eigenvector to a row vector of the sqrt of the rank
+		let eigenvector = new Array(rank).fill(0).map(() => new Array(1).fill(Math.sqrt(rank)));
+	
+		// Compute the corresponding eigenvalue
+		let eigenvalue = this.eigenvalue_of_vector(mat, eigenvector);
+	
+		let epsilon = 1.0;
+		let iter = 0;
+		while (epsilon > tolerance && iter < max_iterations) {
+	
+			let old_eigenvalue = JSON.parse(JSON.stringify(eigenvalue));
+	
+			// Multiply the Matrix M by the guessed eigenveector
+			let Mv = this.matmul(mat,eigenvector);
+	
+			// Normalize the eigenvector to unit length
+			eigenvector = this.normalize(Mv);
+	
+			// Calculate the associated eigenvalue with the eigenvector (transpose(v) * M * v)
+			eigenvalue = this.eigenvalue_of_vector(mat, eigenvector);
+	
+			// Calculate the epsilon of the differences
+			epsilon = Math.abs( eigenvalue - old_eigenvalue);
+			iter++;
+	
+		};
+	
+		return [eigenvalue, eigenvector];
+	}
+	
+	//Input square 2D matrix
+	static eigens(mat, tolerance=0.0001, max_iterations=1000) {
+
+		let eigenvalues = [];
+		let eigenvectors = [];
+	
+		for (let i = 0; i < mat.length; i++ ) {
+	
+			// Compute the remaining most prominent eigenvector of the matrix M
+			let result = this.power_iteration(mat, tolerance, max_iterations);
+	
+			// Separate the eigenvalue and vector from the return array
+			let eigenvalue = result[0];
+			let eigenvector = result[1];
+	
+			eigenvalues[i] = eigenvalue;
+			eigenvectors[i] = this.flatten_vector(eigenvector);
+	
+			// Now remove or peel off the last eigenvector
+			mat = this.shift_deflate(mat, eigenvalue, eigenvector);
+		}
+	
+		return [eigenvalues, eigenvectors];
+	}
+
+	//Input square 2D matrix. For eeg data you input a square covariance matrix of the signal data (or the z-scores of the signal data)
+	static pca(mat,tolerance = 0.00001) {
+		let dims = mat.length;
+		
+		let t = new Array(dims);
+		let p = new Array(dims);
+
+		let mat_t = this.transpose(mat);
+		t[0] = this.column(mat,0);
+		let epsilon = 1.0;
+		let iter = 0;
+
+		while(espilon > tolerance) {
+			iter++;
+			p[0] = this.matmul(mat_t,t[0]);
+			let tp = this.matmul(this.transpose(t[0]),t[0]);
+			p[0] = this.matscale(p[0], 1.0 / tp);
+
+			// Normalize p
+			let p_length = Math.sqrt(this.matmul(this.transpose(p[0]), p[0]));
+			p[0] = this.matscale(p[0], 1.0 / p_length);
+	
+			let t_new = this.matmul(mat, p[0]);
+			let pp = this.matmul(this.transpose(p[0]), p[0]);
+			t_new = this.matscale(t_new, 1.0 / pp);
+	
+			epsilon = this.squared_difference(t[0], t_new);
+	
+			t[0] = JSON.parse(JSON.stringify(t_new));
+		}
+
+		let components = this.matmul(this.transpose(t[0]),t[0]);
+
+		return components;
+	}	
+
+	//-------------------------------------------------------------
+
+	//pass in 1 second of raw data ish recommended, desired event timestamps and signals are ordered from least current to most current 
+	static p300(event_timestamps=[],raw_signal=[],signal_timestamps=[], sps=256) {
+		let smoothingstep = Math.floor(sps/10); //300ms width peak, 1/10th sec smoothing for filtering
+		let smoothed = this.sma(raw_signal,smoothingstep);
+		let peaks = this.peakDetect(smoothed,'peak',smoothingstep); //returns indices of peaks
+		let mean = this.mean(smoothed);
+		let std = this.std(smoothed,mean);
+
+		let p_idx = 0;
+		let candidates = [];
+		if(peaks.length > 0) {
+			event_timestamps.forEach((t,j) => {
+				while(signal_timestamps[peaks[p_idx]] < t + 200) { //roll over peaks that are behind of the latest event + 200ms
+					p_idx++;
+					if(!peaks[p_idx]) break;
+				}
+				
+				let tempi = 0;
+				let tempcandidates = [];
+				while(signal_timestamps[peaks[p_idx+tempi]] < t + 600 ) { //get peaks that are behind the latest event + (200ms-600ms)
+					tempcandidates.push(p_idx+tempi);
+					tempi++;
+					if(!peaks[p_idx+tempi]) break;
+				}
+				if(tempcandidates.length > 1) { //if multiple peaks found choose the biggest one for the main p300 peak (not worrying about p1,p2,n1,n2 yet)
+					let peakvals = [];
+					tempcandidates.forEach((tc) => {
+						peakvals.push(smoothed[peaks[tc]]);
+					});
+					let max = Math.max(...peakvals);
+					let maxi = tempcandidates[peakvals.indexOf(max)];
+
+					candidates.push({
+						event_timestamp:t, 
+						event_index:j, 
+						peak_timestamp:signal_timestamps[[peaks[maxi]]],
+						signal_index:[peaks[maxi]], 
+						signal_amplitude:raw_signal[[peaks[maxi]]], 
+						zscore:(smoothed[peaks[maxi]]-mean)/std //significance measure
+					});
+				} else if (tempcandidates.length === 1) candidates.push({
+					event_timestamp:t, 
+					event_index:j, 
+					peak_timestamp:signal_timestamps[peaks[tempcandidates[0]]],
+					signal_index:peaks[tempcandidates[0]],
+					signal_amplitude:raw_signal[[peaks[tempcandidates[0]]]],
+					zscore:(smoothed[peaks[tempcandidates[0]]]-mean)/std //significance measure
+
+				});
+			});
+		} return candidates;
+	}
 
 }
+
+;// CONCATENATED MODULE: ./node_modules/brainsatplay-math/index.js
+
 
 /***/ }),
 
@@ -22921,1307 +24274,7 @@ class CallbackManager {
 
 /***/ }),
 
-/***/ 526:
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "T9": () => (/* binding */ gpuUtils)
-});
-
-// UNUSED EXPORTS: makeCanvasKrnl, makeKrnl
-
-// EXTERNAL MODULE: ./node_modules/gpujsutils/src/gpu-browser.min.js
-var gpu_browser_min = __webpack_require__(759);
-;// CONCATENATED MODULE: ./node_modules/gpujsutils/src/gpuUtils-functs.js
-//By Joshua Brewster, Dovydas Stirpeika (AGPL v3.0 License)
-//------------------------------------
-//---------GPU Utility Funcs---------- (gpu.addFunction())
-//------------------------------------
-
-
-function add(a, b) { return a + b; }
-function sub(a, b) { return a - b; }
-function mul(a, b) { return a * b; }
-function div(a, b) { return a / b; }
-
-function cadd(a_real, a_imag, b_real, b_imag) {
-    return [a_real + b_real, a_imag + b_imag];
-}
-
-function csub(a_real, a_imag, b_real, b_imag) {
-    return [a_real - b_real, a_imag - b_imag];
-}
-
-function cmul(a_real, a_imag, b_real, b_imag) {
-    return [a_real*b_real - a_imag*b_imag, a_real*b_imag + a_imag*b_real];
-}
-
-function cexp(a_real, a_imag) {
-    const er = Math.exp(a_real);
-    return [er * Math.cos(a_imag), er * Math.sin(a_imag)];
-}
-
-function mag(a, b) { // Returns magnitude
-    return Math.sqrt(a*a + b*b);
-}
-
-function conj(imag) { //Complex conjugate of x + iy is x - iy
-    return 0 - imag;
-}
-
-function lof(n) { //Lowest odd factor
-    const sqrt_n = Math.sqrt(n);
-    var factor = 3;
-
-    while(factor <= sqrt_n) {
-        if (n % factor === 0) return factor;
-        factor += 2;
-    }
-}
-
-function mean(arr, len) {
-    var mean = 0;
-    for (var i = 0; i < len; i++) {
-        mean += arr[i];
-    }
-    return mean/len;
-}
-
-function est(arr, mean, len) {
-    var est = 0;
-    for (var i=0; i<len;i++){
-        est += (arr[i]-mean)*(arr[i]-mean);
-    }
-    return Math.sqrt(est);
-}
-
-function mse(arr, mean, len) { //mean squared error
-    var est = 0;
-    var vari = 0;
-    for (var i = 0; i < len; i++) {
-        vari = arr[i]-mean;
-        est += vari*vari;
-    }
-    return est/len;
-}
-
-function rms(arr, mean, len) { //root mean square error
-    var est = 0;
-    var vari = 0;
-    for (var i = 0; i < len; i++) {
-        vari = arr[i]-mean;
-        est += vari*vari;
-    }
-    return Math.sqrt(est/len);
-}
-
-function xcor(arr1, arr1mean, arr1Est, arr2, arr2mean, arr2Est, len, delay) { //performs a single pass of a cross correlation equation, see correlogramsKern
-    var correlation = 0;
-    for (var i = 0; i < len; i++)  {
-        var j = i+delay;
-        var k = 0;
-        if(j < len) { k = arr2[j]; }
-        correlation += (arr1[i]-arr1mean)*(k-arr2mean);
-    }
-    return correlation/(arr1Est*arr2Est);
-}
-
-function softmax(array, len, i) { // Returns a single array value for a 1d softmax function.
-    var esum = 0;
-    for(var j = 0; j < len; j++){
-        esum+= Math.exp(array[j]);
-    }
-    return Math.exp(array[i])/esum;
-}
-
-function DFT(signal, len, freq){ //Extract a particular frequency
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-
-    for(var i = 0; i<len; i++){
-      var sharedi = shared*i; //this.thread.x is the target frequency
-      real = real+signal[i]*Math.cos(sharedi);
-      imag = imag-signal[i]*Math.sin(sharedi);
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real*_len,imag*_len]; //mag(real,imag)
-}
-
-function DFTlist(signals, len, freq, n) { //Extract a particular frequency
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-    for(var i = 0; i<len; i++){
-      var sharedi = shared*i; //this.thread.x is the target frequency
-      real = real+signals[i+(len-1)*n]*Math.cos(sharedi);
-      imag = imag-signals[i+(len-1)*n]*Math.sin(sharedi);  
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real*_len,imag*_len]; //mag(real,imag)
-}
-
-//FFT, simply implements a nyquist frequency based index skip for frequencies <= sampleRate*.25.
-//Other optimization: could do 4 loops per thread and return a vec4, this is what you see in some other ultrafast libs
-function FFT(signal, len, freq, sr){ //Extract a particular frequency
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-
-    var skip = 1;
-    var N = 0;
-    var factor = sr*.25;
-    if(freq <= factor){
-        while(freq <= factor){
-            factor=factor*.5;
-            skip+=1;
-        }
-    }
-
-    for(var i = 0; i<len; i+=skip){
-      var j = i;
-      if(j > len) { j = len; }
-      var sharedi = shared*j; //this.thread.x is the target frequency
-      real = real+signal[j]*Math.cos(sharedi);
-      imag = imag-signal[j]*Math.sin(sharedi);
-      N += 1;
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real/N,imag/N]; //mag(real,imag)
-}
-
-function FFTlist(signals, len, freq, n, sr) { //Extract a particular frequency from a 1D list of equal sized signal arrays. Uses less samples for lower frequencies closer to nyquist threshold
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-
-    var skip = 1;
-    var N = 0;
-    var factor = sr*.25;
-    if(freq <= factor){
-        while(freq <= factor){
-            factor=factor*.5;
-            skip+=1;
-        }
-    }
-
-    for(var i = 0; i<len; i+=skip){
-        var j = i;
-      if(j > len) { j = len; }
-      var sharedi = shared*j; //this.thread.x is the target frequency
-      real = real+signals[j+(len-1)*n]*Math.cos(sharedi);
-      imag = imag-signals[j+(len-1)*n]*Math.sin(sharedi);
-      N += 1;  
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real/N,imag/N]; //mag(real,imag)
-}
-
-//Conjugated real and imaginary parts for iDFT (need to test still)
-function iDFT(fft, len, freq){ //inverse DFT to return time domain
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-
-    for(var i = 0; i<len; i++){
-      var sharedi = shared*i; //this.thread.x is the target frequency
-      real = real+fft[i]*Math.cos(sharedi);
-      imag = fft[i]*Math.sin(sharedi)-imag;  
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real*_len,imag*_len]; //mag(real,imag)
-}
-
-function iDFTlist(fft,len,freq,n){ //inverse DFT to return time domain 
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len
-    for (var i = 0; i<len; i++) {
-      var sharedi = shared*i; //this.thread.x is the target frequency
-      real = real+fft[i+(len-1)*n]*Math.cos(sharedi);
-      imag = fft[i+(len-1)*n]*Math.sin(sharedi)-imag;  
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real*_len,imag*_len]; //mag(real,imag)
-}
-
-function iFFT(fft, len, freq, sr){ //inverse FFT to return time domain
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-
-    var skip = 1;
-    var N = 0;
-    var factor = sr*.25;
-    if(freq <= factor){
-        while(freq <= factor){
-            factor=factor*.5;
-            skip+=1;
-        }
-    }
-
-    for(var i = 0; i<len; i+=skip){
-      var j = i;
-      if(j > len) { j = len; }
-      var sharedi = shared*j; //this.thread.x is the target frequency
-      real = real+fft[j]*Math.cos(sharedi);
-      imag = fft[j]*Math.sin(sharedi)-imag;  
-      N += 1;
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real/N,imag/N]; //mag(real,imag)
-}
-
-function iFFTlist(signals, len, freq, n, sr) { //Extract a particular frequency from a 1D list of equal sized signal arrays. Uses less samples for lower frequencies closer to nyquist threshold
-    var real = 0;
-    var imag = 0;
-    var _len = 1/len;
-    var shared = 6.28318530718*freq*_len;
-
-    var skip = 1;
-    var N = 0;
-    var factor = sr*.25;
-    if(freq <= factor){
-        while(freq <= factor){
-            factor=factor*.5;
-            skip+=1;
-        }
-    }
-
-    for(var i = 0; i<len; i+=skip){
-        var j = i;
-      if(j > len) { j = len; }
-      var sharedi = shared*j; //this.thread.x is the target frequency
-      real = real+signals[j+(len-1)*n]*Math.cos(sharedi);
-      imag = signals[j+(len-1)*n]*Math.sin(sharedi)-imag;
-      N += 1;  
-    }
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return [real/N,imag/N]; //mag(real,imag)
-}
-
-
-
-
-
-
-
-//------------------------------------
-//---------Kernel functions----------- (gpu.createKernel(func))
-//------------------------------------
-
-
-function correlogramsKern(arrays, len) { //Computes cross correlations of each pair of arrays given to the function. so xcor[0,1],xcor[2,3],etc
-
-    var k = Math.floor(this.thread.x/len)*2;
-    var delay = this.thread.x - Math.floor(this.thread.x/len)*len;
-    var arr1mean = mean(arrays[k],len);
-    var arr2mean = mean(arrays[k+1],len);
-    var arr1Est = est(arrays[k],arr1mean,len);
-    var arr2Est = est(arrays[k+1],arr2mean,len);
-
-    var y_x = xcor(arrays[k],arr1mean,arr1Est,arrays[k+1],arr2mean,arr2Est,len,delay);
-
-    return y_x;
-}
-
-//Computes cross correlations of each pair of arrays given to the function. so xcor[0,1],xcor[2,3],etc
-//Takes precomputed averages and estimators for each array for efficiency
-function correlogramsPCKern(arrays, len, means, estimators) { 
-    var k = Math.floor(this.thread.x/len)*2;
-    var delay = this.thread.x - Math.floor(this.thread.x/len)*len;
-    var arr1mean = means[k];
-    var arr2mean = means[k+1];
-    var arr1Est = estimators[k];
-    var arr2Est = estimators[k+1];
-
-    var y_x = xcor(arrays[k],arr1mean,arr1Est,arrays[k+1],arr2mean,arr2Est,len,delay);
-
-    return y_x;
-}
-
-
-//Return frequency domain based on DFT
-function dftKern(signal, len, scalar) {
-    var result = DFT(signal,len, this.thread.x);
-    return mag(result[0], result[1])*scalar;
-}
-
-function idftKern(amplitudes, len, scalar) {
-    var result = iDFT(amplitudes, len, this.thread.x);
-    return mag(result[0], result[1])*scalar;
-}
-
-function fftKern(signal, len, scalar, sampleRate) {
-    var result = FFT(signal,len, this.thread.x, sampleRate);
-    return mag(result[0], result[1])*scalar;
-}
-
-function ifftKern(amplitudes, len, scalar, sampleRate) {
-    var result = iFFT(amplitudes, len, this.thread.x, sampleRate);
-    return mag(result[0], result[1])*scalar;
-}
-
-// Takes a 2D array input [signal1[],signal2[],signal3[]]; does not work atm
-function listdft2DKern(signals, scalar) {
-    var len = this.output.x;
-    var result = DFT(signals[this.thread.y],len,this.thread.x);
-    //var mag = Math.sqrt(real[k]*real[k]+imag[k]*imag[k]);
-    return mag(result[0],result[1])*scalar; //mag(real,imag)
-}
-
-// [[signals1][signals2]]
-
-// More like a vertex buffer list to chunk through lists of signals
-function listdft1DKern(signals, len, scalar) {
-    var result = [0, 0];
-    if (this.thread.x <= len) {
-      result = DFT(signals,len,this.thread.x);
-    } else {
-      var n = Math.floor(this.thread.x/len);
-      result = DFTlist(signals,len,this.thread.x-n*len,n);
-    }
-
-    return mag(result[0],result[1])*scalar;
-} // [signals1,signasl2]
-
-// More like a vertex buffer list to chunk through lists of signals
-function listfft1DKern(signals, len, scalar, sps) {
-    var result = [0, 0];
-    if (this.thread.x <= len) {
-      result = FFT(signals,len,this.thread.x,sps);
-    } else {
-      var n = Math.floor(this.thread.x/len);
-      result = FFTlist(signals,len,this.thread.x-n*len,n,sps);
-    }
-
-    return mag(result[0],result[1])*scalar;
-} // [signals1,signasl2]
-
-function dft_windowedKern(signal, sampleRate, freqStart, freqEnd, scalar) {
-    var result = [0,0];
-    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-    result = DFT(signal,sampleRate,freq);
-
-    return mag(result[0],result[1])*scalar;
-} 
-
-
-//windowed functions should use a 1 second window for these hacky DFTs/FFTs to work right.
-
-function fft_windowedKern(signal, sampleRate, freqStart, freqEnd, scalar) {
-    var result = [0,0];
-    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-    result = FFT(signal,sampleRate,freq);
-
-    return mag(result[0],result[1])*scalar;
-}
-
-function idft_windowedKern(amplitudes, sampleRate, freqStart, freqEnd, scalar) {
-    var result = [0,0];
-    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-    result = iDFT(amplitudes,sampleRate,freq);
-
-    return mag(result[0],result[1])*scalar;
-}
-
-function ifft_windowedKern(amplitudes, sampleRate, freqStart, freqEnd, scalar) {
-    var result = [0,0];
-    var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-    result = iFFT(amplitudes,sampleRate,freq);
-
-    return mag(result[0],result[1])*scalar;
-}
-
-function listdft1D_windowedKern(signals, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
-    var result = [0, 0];
-    if (this.thread.x < sampleRate) {
-      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-      result = DFT(signals,sampleRate,freq);
-    } else {
-      var n = Math.floor(this.thread.x/sampleRate);
-      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
-      result = DFTlist(signals,sampleRate,freq-n*sampleRate,n);
-    }
-    //var mags = mag(result[0],result[1]);
-
-    return mag(result[0],result[1])*scalar; 
-}
-
-function listfft1D_windowedKern(signals, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
-    var result = [0, 0];
-    if (this.thread.x < sampleRate) {
-      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-      result = FFT(signals,sampleRate,freq,sampleRate);
-    } else {
-      var n = Math.floor(this.thread.x/sampleRate);
-      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
-      result = FFTlist(signals,sampleRate,freq-n*sampleRate,n,sampleRate);
-    }
-    //var mags = mag(result[0],result[1]);
-
-    return mag(result[0],result[1])*scalar; 
-}
-
-function listidft1D_windowedKern(ffts, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
-    var result = [0, 0];
-    if (this.thread.x < sampleRate) {
-      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-      result = iDFT(ffts,sampleRate,freq);
-    } else {
-      var n = Math.floor(this.thread.x/sampleRate);
-      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
-      result = iDFTlist(ffts,sampleRate,freq-n*sampleRate,n);
-    }
-    //var mags = mag(result[0],result[1]);
-
-    return mag(result[0]*2,result[1]*2)*scalar; //Multiply result by 2 since we are only getting the positive results and want to estimate the actual amplitudes (positive = half power, reflected in the negative axis)
-}
-
-function listifft1D_windowedKern(ffts, sampleRate, freqStart, freqEnd, scalar) { //Will make a higher resolution DFT for a smaller frequency window.
-    var result = [0, 0];
-    if (this.thread.x < sampleRate) {
-      var freq = ( (this.thread.x/sampleRate) * ( freqEnd - freqStart ) ) + freqStart;
-      result = iFFT(ffts,sampleRate,freq);
-    } else {
-      var n = Math.floor(this.thread.x/sampleRate);
-      var freq = ( ( ( this.thread.x - n * sampleRate) / sampleRate ) * ( freqEnd - freqStart ) ) + freqStart;
-      result = iFFTlist(ffts,sampleRate,freq-n*sampleRate,n);
-    }
-    //var mags = mag(result[0],result[1]);
-
-    return mag(result[0]*2,result[1]*2)*scalar; //Multiply result by 2 since we are only getting the positive results and want to estimate the actual amplitudes (positive = half power, reflected in the negative axis)
-}
-
-//e.g. arrays = [[arr1],[arr2],[arr3],[arr4],[arr5],[arr6]], len = 10, n = 2, scalar=1... return results of [arr1*arr2], [arr3*arr4], [arr5*arr6] as one long array that needs to be split
-function bulkArrayMulKern(arrays, len, n, scalar) {
-    var i = n*Math.floor(this.thread.x/len); //Jump forward in array buffer
-    var product = arrays[i][this.thread.x];
-    for (var j = 0; j < n; j++) {
-      product *= arrays[j][this.thread.x];
-    }
-    return product*scalar;
-}
-
-function ImgConv2DKern(img, width, height, kernel, kernelLength) {
-    let kernelRadius = (Math.sqrt(kernelLength) - 1) / 2;
-    const kSize = 2 * kernelRadius + 1;
-    let r = 0, g = 0, b = 0;
-
-    let i = -kernelRadius;
-    let kernelOffset = 0;
-    while (i <= kernelRadius) {
-        if (this.thread.x + i < 0 || this.thread.x + i >= width) {
-            i++;
-            continue;
-        }
-
-        let j = -kernelRadius;
-        while (j <= kernelRadius) {
-            if (this.thread.y + j < 0 || this.thread.y + j >= height) {
-                j++;
-                continue;
-            }
-
-            kernelOffset = (j + kernelRadius) * kSize + i + kernelRadius;
-            const weights = kernel[kernelOffset];
-            const pixel = img[this.thread.y + i][this.thread.x + j];
-            r += pixel.r * weights;
-            g += pixel.g * weights;
-            b += pixel.b * weights;
-            j++;
-        }
-        i++;
-    }
-
-    this.color(r, g, b);
-}
-
-function multiImgConv2DKern(img, width, height, kernels, kernelLengths, nKernels) {
-    
-    let r = 0, g = 0, b = 0;
-    for(var i = 0; i < nKernels; i++){
-
-        let kernelLength = kernelLengths[i];            
-        let kernelRadius = (Math.sqrt(kernelLength) - 1) / 2;
-        //(src, width, height, kernel, kernelRadius)
-        const kSize = 2 * kernelRadius + 1;
-        
-        let k = -kernelRadius;
-        let kernelOffset = 0;
-        while (k <= kernelRadius) {
-            if (this.thread.x + k < 0 || this.thread.x + k >= width) {
-                k++;
-                continue;
-            }
-
-            let j = -kernelRadius;
-            while (j <= kernelRadius) {
-                if (this.thread.y + j < 0 || this.thread.y + j >= height) {
-                j++;
-                continue;
-                }
-
-                kernelOffset = (j + kernelRadius) * kSize + k + kernelRadius;
-                const weights = kernels[i][kernelOffset];
-                const pixel = img[this.thread.y + k][this.thread.x + j];
-    
-                r += pixel.r * weights;
-                g += pixel.g * weights;
-                b += pixel.b * weights;
-            
-                //img[this.thread.y + k][this.thread.x + j] = pixel;      
-                    
-                j++;
-            }
-            k++;
-        }
-    }
-    this.color(r,g,b);
-}
-
-function transpose2DKern(mat2) { //Transpose a 2D matrix, meant to be combined
-    return mat2[this.thread.y][this.thread.x];
-}
-
-
-//function deferredPass(vPos, vNorm, vAlbedo, vDepth, vSpec) {  } //project geometry, light geometry
-
-/*
-Scene drawing:
-(With depth testing enabled)
-1. Project object local spaces to world space based on geometry and world coordinates
-1.5 do some occlusion culling for which texture data to send to the gpu, requires last camera matrix
-2. Now send to lighting pass, with coloring properties defined by different texture maps. 
-3. Project result to camera space based on camera position and aperture.
-4. Draw result
-*/
-
-
-//Note on pixel operations in gpujs: create kernel with setGraphical(true), render() to offscreencanvas, get render.getPixels() on each frame for pixel values which can be stored math operations
-
-
-//Exports
-
-const createGpuKernels = {
-    correlogramsKern, correlogramsPCKern, dftKern, idftKern, fftKern, ifftKern,
-    dft_windowedKern, idft_windowedKern, fft_windowedKern, ifft_windowedKern, 
-    listdft2DKern, listdft1DKern, listfft1DKern, listfft1D_windowedKern, listdft1D_windowedKern, listidft1D_windowedKern, listifft1D_windowedKern,
-    bulkArrayMulKern, fftKern, ifftKern, multiImgConv2DKern,
-    ImgConv2DKern
-}
-
-const addGpuFunctions = [
-    add, sub, mul, div, cadd, csub,
-    cmul, cexp, mag, conj, lof, mean, est,
-    mse, rms, xcor, softmax, DFT, DFTlist,
-    iDFT, iDFTlist, FFT, iFFT, iFFTlist
-];
-;// CONCATENATED MODULE: ./node_modules/gpujsutils/src/gpuUtils.js
- // becomes a window variable
-
-
-//By Joshua Brewster, Dovydas Stirpeika (AGPL v3.0 License)
-
-function makeKrnl(gpu, f, opts = {
-  setDynamicOutput: true,
-  setDynamicArguments: true,
-  setPipeline: true,
-  setImmutable: true,
-  setGraphical: false
-}) {
-
-  const k = gpu.createKernel(f);
-
-  if (opts.setDynamicOutput)    k.setDynamicOutput(true);
-  if (opts.output)              k.setOutput(opts.output);
-  if (opts.setDynamicArguments) k.setDynamicArguments(true);
-  if (opts.setPipeline)         k.setPipeline(true);
-  if (opts.setImmutable)        k.setImmutable(true);
-  if (opts.setGraphical)        k.setGraphical(true);
-
-  //.setOutput([signal.length]) //Call before running the kernel
-  //.setLoopMaxIterations(signal.length);
-
-  return k;
-}
-
-function makeCanvasKrnl(toAppend, gpu, f, opts = {
-  output: [300,300],
-  setDynamicArguments: true,
-  setDynamicOutput: true,
-  setPipeline: false,
-  setImmutable: true,
-  setGraphical: true
-}) {
-
-  const k = makeKrnl(gpu,f,opts);
-
-  //k();
-
-  const canvas = k.canvas; 
-
-  if (typeof toAppend === 'string') document.getElementById(toAppend).appendChild(canvas);
-  else toAppend.appendChild(canvas);
-
-  return k; //run k() with the input arguments in an animation loop, get graphical output.
-}
-
-class gpuUtils {
-  
-  constructor(gpu = new GPU()) {
-    this.gpu = gpu;
-    this.kernels = []; // {name:"",f:foo(){}}
-
-    this.kernel;
-    this.PI = 3.141592653589793;
-    this.SQRT1_2 = 0.7071067811865476
-
-    this.addFunctions();
-
-    this.imgkernels = {
-      edgeDetection: [
-        -1, -1, -1,
-        -1,  8, -1,
-        -1, -1, -1
-      ], boxBlur: [
-        1/9, 1/9, 1/9,
-        1/9, 1/9, 1/9,
-        1/9, 1/9, 1/9
-      ], sobelLeft: [
-        1,  0, -1,
-        2,  0, -2,
-        1,  0, -1
-      ], sobelRight: [
-        -1, 0, 1,
-        -2, 0, 2,
-        -1, 0, 1
-      ], sobelTop: [
-        1,  2,  1,
-        0,  0,  0,
-        -1, -2, -1  
-      ], sobelBottom: [
-        -1, 2, 1,
-        0, 0, 0,
-        1, 2, 1
-      ], identity: [
-        0, 0, 0, 
-        0, 1, 0, 
-        0, 0, 0
-      ], gaussian3x3: [
-        1,  2,  1, 
-        2,  4,  2, 
-        1,  2,  1
-      ], guassian7x7: [
-        0, 0,  0,   5,   0,   0,  0,
-        0, 5,  18,  32,  18,  5,  0,
-        0, 18, 64,  100, 64,  18, 0,
-        5, 32, 100, 100, 100, 32, 5,
-        0, 18, 64,  100, 64,  18, 0,
-        0, 5,  18,  32,  18,  5,  0,
-        0, 0,  0,   5,   0,   0,  0,
-      ], emboss: [
-        -2, -1,  0, 
-        -1,  1,  1, 
-        0,  1,  2
-      ], sharpen: [
-        0, -1,  0,
-        -1,  5, -1,
-        0, -1,  0
-      ]
-    };
-  }
-
-  //adds math functions to use per-thread
-  addFunction(func = function f(){}) {
-    this.gpu.addFunction(func);
-  }
-
-  //add kernels to run based on input data. Input/Output sizes are dynamically allocated, functions are saved on the gpu to improve runtimes
-  addKernel(name="", krnl=function foo(){}) {
-    let found = this.kernels.find((o)=> {
-      if(o.name === name) {
-        return true;
-      }
-    });
-    if(!found) {
-      this.kernels.push({name:name, krnl:makeKrnl(this.gpu,krnl)});
-      return true;
-    } else { 
-      console.error('Kernel already exists'); 
-      return false;
-    }
-    
-  }
-
-  addCanvasKernel(name, f, toAppend, opts) {
-    let found = this.kernels.find((o)=> {
-      if(o.name === name) {
-        return true;
-      }
-    });
-    if(!found) {
-      let krnl = makeCanvasKrnl(toAppend,this.gpu,f, opts)
-      this.kernels.push({name,krnl});
-      return krnl;
-    } else { 
-      console.error('Kernel already exists'); 
-      return false;
-    }
-    
-  }
-
-  //combine two or more kernels into a single function, this lets you run multiple kernels on the GPU (with appropriately varying inputs/output sizes) before returning to the CPU.
-  //Discount compute shaders
-  combineKernels(name, fs=[], ckrnl=function foo() {}) {
-    let found = this.kernels.find((o)=> {
-      if(o.name === name) {
-        return true;
-      }
-    });
-    if(!found) {
-      fs.forEach((f,i)=>{
-        if(typeof f === 'string') {
-          let found2 = this.krnl.find((o)=> {
-            if(o.name === name) {
-              return true;
-            }
-          });
-          if(found2) fs[i] = found2.kernel;
-          else return false;
-        } else if (typeof f === 'function') {
-          if(this[f.name]) {
-            //cool
-          } else {
-            this.addKernel(f.name, f);
-          }
-        }
-      });
-      this.kernels.push({name:name, krnl:this.gpu.combineKernels(...fs,ckrnl)});
-      return true;
-    } else { 
-      console.error('Kernel already exists'); 
-      return false;
-    }
-  }
-
-  callKernel(name="",args=[]) {
-    let result;
-    let found = this.kernels.find((o)=> {
-      if(o.name === name) {
-        //console.log(o.krnl,args)
-        result = o.krnl(...args);
-        return true;
-      }
-    });
-    if(!found) {
-      console.error('Kernel not found');
-      return false;
-    } else return result;
-  }
-
-  callCanvasKernel(name="",args=[],outputDims=[]) {
-    let result;
-    let found = this.kernels.find((o)=> {
-      if(o.name === name) {
-        //console.log(o.krnl,args)
-        if (outputDims.length === 2) o.krnl.setOutput(outputDims);
-        result = o.krnl(...args);
-        return true;
-      }
-    });
-    if(!found) {
-      console.error('Kernel not found');
-      return false;
-    } else return result;
-  }
-
-  hasKernel(name="") {
-    let found = this.kernels.find((o)=> {
-      if(o.name === name) {
-        return true;
-      }
-    });
-    if(!found) {
-      return false;
-    } else return true;
-  }
-
-  addFunctions() { 
-    addGpuFunctions.forEach(f => this.gpu.addFunction(f));
-
-    this.correlograms = makeKrnl(this.gpu, createGpuKernels.correlogramsKern);
-    this.correlogramsPC = makeKrnl(this.gpu, createGpuKernels.correlogramsKern);
-    this.dft = makeKrnl(this.gpu, createGpuKernels.dftKern);
-    this.idft = makeKrnl(this.gpu, createGpuKernels.idftKern);
-    this.dft_windowed = makeKrnl(this.gpu, createGpuKernels.dft_windowedKern);
-    this.idft_windowed = makeKrnl(this.gpu, createGpuKernels.idft_windowedKern);
-    this.fft = makeKrnl(this.gpu, createGpuKernels.fftKern);
-    this.ifft = makeKrnl(this.gpu, createGpuKernels.ifftKern);
-    this.fft_windowed = makeKrnl(this.gpu, createGpuKernels.fft_windowedKern);
-    this.ifft_windowed = makeKrnl(this.gpu, createGpuKernels.ifft_windowedKern);
-    this.listdft2D = makeKrnl(this.gpu, createGpuKernels.listdft2DKern);
-    this.listdft1D = makeKrnl(this.gpu, createGpuKernels.listdft1DKern);
-    this.listdft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listdft1D_windowedKern);
-    this.listfft1D = makeKrnl(this.gpu, createGpuKernels.listfft1DKern);
-    this.listfft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listfft1D_windowedKern);
-    this.listidft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listidft1D_windowedKern);
-    this.listifft1D_windowed = makeKrnl(this.gpu, createGpuKernels.listifft1D_windowedKern);
-    this.bulkArrayMul = makeKrnl(this.gpu, createGpuKernels.bulkArrayMulKern);
-
-    this.kernels.push(
-      {name:"correlograms", krnl:this.correlograms},
-      {name:"correlogramsPC", krnl: this.correlogramsPC},
-      {name:"dft", krnl:this.dft},
-      {name:"idft", krnl:this.idft},
-      {name:"dft_windowed", krnl:this.idft_windowed},
-      {name:"fft", krnl:this.fft},
-      {name:"ifft", krnl:this.ifft},
-      {name:"fft_windowed", krnl:this.fft_windowed},
-      {name:"ifft_windowed", krnl:this.ifft_windowed},
-      {name:"listdft2D", krnl:this.listdft2D},
-      {name:"listdft1D", krnl:this.listdft1D},
-      {name:"listdft1D_windowed", krnl:this.listdft1D_windowed},
-      {name:"listfft1D", krnl:this.listfft1D},
-      {name:"listfft1D_windowed", krnl:this.listfft1D_windowed},
-      {name:"listidft1D_windowed", krnl:this.listidft1D_windowed},
-      {name:"listifft1D_windowed", krnl:this.listifft1D_windowed},
-      {name:"bulkArrayMul", krnl:this.bulkArrayMul}
-      );
-    
-    //----------------------------------- Easy gpu pipelining
-    //------------Combine Kernels-------- gpu.combineKernels(f1,f2,function(a,b,c) { f1(f2(a,b),c); });
-    //----------------------------------- TODO: Make this actually work (weird error)
-
-    //Bandpass FFT+iFFT to return a cleaned up waveform
-    const signalBandpass = (signal, sampleRate, freqStart, freqEnd, scalar) => { //Returns the signal wave with the bandpass filter applied
-      var dft = this.fft_windowed(signal, sampleRate, freqStart, freqEnd, scalar, 0);
-      var filtered_signal = this.ifft_windowed(dft, sampleRate, freqStart, freqEnd, scalar); 
-      return filtered_signal;
-    }
-
-    //this.signalBandpass = this.gpu.combineKernels(this.dft_windowedKern,this.idft_windowedKern, signalBandpass);
-    
-    const signalBandpassMulti = (signals, sampleRate, freqStart, freqEnd, scalar) => {
-      var dfts = this.listdft1D_windowed(signals,sampleRate,freqStart,freqEnd,scalar, new Array(Math.ceil(signals/sampleRate)).fill(0));
-      var filtered_signals = this.listifft1D_windowed(dfts,sampleRate,freqStart,freqEnd,scalar);
-      return filtered_signals;
-    }
-
-    //this.signalBandpassMulti = this.gpu.combineKernels(this.listdft1D_windowed,this.listidft1D_windowed, signalBandpassMulti);
-
-    //TODO: automatic auto/cross correlation and ordering.
-    //Input signals like this : [signal1,signal2,autocor1,autocor2,crosscor,...repeat for desired coherence calculations] or any order of that.
-    this.gpuCoherence = (signals, sampleRate, freqStart, freqEnd, scalar) => { //Take FFTs of the signals, their autocorrelations, and cross correlation (5 FFTs per coherence), then multiply.
-      var xcors = this.correlograms(signals);
-      var dfts = this.listfft1D_windowed(xcors, sampleRate, freqStart, freqEnd, scalar, new Array(Math.ceil(signals/sampleRate)).fill(0) );
-      var products = this.bulkArrayMul(dfts, sampleRate, 5, 1);
-      return products;
-    }
-
-    //Need to get this working to be MUCH faster, the above method returns to the CPU each call, the below does not.
-    //this.gpuCoherence = this.gpu.combineKernels(this.listdft1D_windowedKern, this.bulkArrayMulKern, this.correlogramsKern, function gpuCoherence(signals,sampleRate,freqStart,freqEnd,scalar) {
-    //  var xcors = this.correlograms(signals);
-    //  var dfts = this.listdft1D_windowed(xcors, sampleRate, freqStart, freqEnd, scalar, new Array(Math.ceil(signals/sampleRate)).fill(0) );
-    //  var products = this.bulkArrayMul(dfts, sampleRate, 5, 1);
-    //  return products;
-    //});
-
-  }
-
-  gpuXCors(arrays, precompute=false, texOut = false) { //gpu implementation for bulk cross/auto correlations, outputs [[0:0],[0:1],...,[1:1],...[n:n]]
- 
-    var outputTex;
-   
-    if(precompute === true) { //Precompute the means and estimators rather than in every single thread
-      var means = [];
-      var ests = [];
-      arrays.forEach((arr,i) => {
-        means.push(arr.reduce((prev,curr)=> curr += prev)/arr.length);
-        ests.push(Math.sqrt(means[i].reduce((sum,item) => sum += Math.pow(item-mean1,2))));
-      });
-
-      var meansbuf = [];
-      var estsbuf = [];
-      var buffer = [];
-      for(var i = 0; i < arrays.length; i++) {
-        for(var j = i; j < arrays.length; j++){
-          buffer.push(...arrays[i],...arrays[j]);
-          meansbuf.push(means[i],means[j]);
-          estsbuf.push(ests[i],ests[j]);
-        }
-      }
-
-      this.correlogramsPC.setOutput([buffer.length]);
-      this.correlogramsPC.setLoopMaxIterations(arrays[0].length*2);
-      outputTex = this.correlogramsPC(buffer, arrays[0].length, meansbuf, estsbuf)
-    }
-    else{
-      var buffer = [];
-      for(var i = 0; i < arrays.length; i++) {
-        for(var j = i; j < arrays.length; j++){
-          buffer.push(...arrays[i],...arrays[j]);
-        }
-      }
-
-      this.correlograms.setOutput([buffer.length]);
-      this.correlograms.setLoopMaxIterations(arrays[0].length*2);
-
-      outputTex = this.correlograms(buffer, arrays[0].length);
-    }
-
-    if(texOut === true) { return outputTex; }
-    var outputbuf = outputTex.toArray();
-    outputTex.delete();
-    var outputarrs = [];
-
-    for(var i = 0; i < arrays.length; i++){
-      outputarrs.push(outputbuf.splice(0, arrays[0].length));
-    }
-
-    return outputarrs;
-
-  } 
-
-  //Input array buffer and the number of seconds of data
-  gpuDFT(signalBuffer, nSeconds, scalar=1, texOut = false){
-
-    var nSamples = signalBuffer.length;
-    var sampleRate = nSamples/nSeconds;
-
-    this.dft.setOutput([signalBuffer.length]);
-    this.dft.setLoopMaxIterations(nSamples);
-
-    var outputTex = this.dft(signalBuffer, nSamples, scalar);
-    var output = null;
-    if(texOut === false){
-      var freqDist = this.makeFrequencyDistribution(nSamples, sampleRate);
-      var signalBufferProcessed = outputTex.toArray();
-      //console.log(signalBufferProcessed);
-      outputTex.delete();
-      return [freqDist,this.orderMagnitudes(signalBufferProcessed)]; //Returns x (frequencies) and y axis (magnitudes)
-    }
-    else {
-      var tex = outputTex; 
-      outputTex.delete(); 
-      return tex;
-    }
-  }
-
-  //Input array of array buffers of the same length and the number of seconds recorded
-  MultiChannelDFT(signalBuffer, nSeconds, scalar=1, texOut=false) {
-    
-    var signalBufferProcessed = [];
-      
-    signalBuffer.forEach((row) => {
-      signalBufferProcessed.push(...row);
-    });
-    //console.log(signalBufferProcessed);
-  
-    var nSamplesPerChannel = signalBuffer[0].length;
-    var sampleRate = nSamplesPerChannel/nSeconds
-
-    this.listdft1D.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
-    this.listdft1D.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
-        
-    var outputTex = this.listdft1D(signalBufferProcessed,nSamplesPerChannel, scalar);
-    if(texOut === false){
-      var orderedMagsList = [];
-
-      var freqDist = this.makeFrequencyDistribution(nSamplesPerChannel, sampleRate);
-      signalBufferProcessed = outputTex.toArray();
-      //console.log(signalBufferProcessed);
-
-      for(var i = 0; i < signalBufferProcessed.length; i+=nSamplesPerChannel){
-        orderedMagsList.push(this.orderMagnitudes([...signalBufferProcessed.slice(i,i+nSamplesPerChannel)]));
-      }
-      //Now slice up the big buffer into individual arrays for each signal
-
-      outputTex.delete();
-      return [freqDist,orderedMagsList]; //Returns x (frequencies) and y axis (magnitudes)
-    }
-    else {
-      var tex = outputTex; 
-      outputTex.delete(); 
-      return tex;
-    }
-  }
-
-      
-  //Input buffer of signals [[channel 0],[channel 1],...,[channel n]] with the same number of samples for each signal. Returns arrays of the positive DFT results in the given window.
-  MultiChannelDFT_Bandpass(signalBuffer=[],nSeconds,freqStart,freqEnd, scalar=1, texOut = false) {
-
-    var signalBufferProcessed = [];
-      
-    signalBuffer.forEach((row) => {
-      signalBufferProcessed.push(...row);
-    });
-    //console.log(signalBufferProcessed);
-
-    var freqEnd_nyquist = freqEnd*2;
-    var nSamplesPerChannel = signalBuffer[0].length;
-    var sampleRate = nSamplesPerChannel/nSeconds;
-    
-    this.listdft1D_windowed.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
-    this.listdft1D_windowed.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
-        
-    var outputTex = this.listdft1D_windowed(signalBufferProcessed,sampleRate,freqStart,freqEnd_nyquist, scalar);
-    if(texOut === true) { return outputTex; }
-    
-    signalBufferProcessed = outputTex.toArray();
-    outputTex.delete();
-
-    //console.log(signalBufferProcessed)
-    //TODO: Optimize for SPEEEEEEED.. or just pass it str8 to a shader
-    var freqDist = this.bandPassWindow(freqStart,freqEnd,sampleRate);
-    return [freqDist, this.orderBPMagnitudes(signalBufferProcessed,nSeconds,sampleRate,nSamplesPerChannel)]; //Returns x (frequencies) and y axis (magnitudes)
-  
-  }
-
-  
-  //Input array buffer and the number of seconds of data
-  gpuFFT(signalBuffer, nSeconds, scalar=1, sampleRate, texOut = false){
-
-    var nSamples = signalBuffer.length;
-    var sampleRate = nSamples/nSeconds;
-
-    this.fft.setOutput([signalBuffer.length]);
-    this.fft.setLoopMaxIterations(nSamples);
-
-    var outputTex = this.fft(signalBuffer, nSamples, scalar, sampleRate);
-    var output = null;
-    if(texOut === false){
-      var freqDist = this.makeFrequencyDistribution(nSamples, sampleRate);
-      var signalBufferProcessed = outputTex.toArray();
-      //console.log(signalBufferProcessed);
-      outputTex.delete();
-      return [freqDist,this.orderMagnitudes(signalBufferProcessed)]; //Returns x (frequencies) and y axis (magnitudes)
-    }
-    else {
-      var tex = outputTex; 
-      outputTex.delete(); 
-      return tex;
-    }
-  }
-
-  //Input array of array buffers of the same length and the number of seconds recorded
-  MultiChannelFFT(signalBuffer, nSeconds, scalar=1, texOut=false) {
-    
-    var signalBufferProcessed = [];
-      
-    signalBuffer.forEach((row) => {
-      signalBufferProcessed.push(...row);
-    });
-    //console.log(signalBufferProcessed);
-  
-    var nSamplesPerChannel = signalBuffer[0].length;
-    var sampleRate = nSamplesPerChannel/nSeconds
-
-    this.listfft1D.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
-    this.listfft1D.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
-        
-    var outputTex = this.listfft1D(signalBufferProcessed,nSamplesPerChannel, scalar, sampleRate);
-    if(texOut === false){
-      var orderedMagsList = [];
-
-      var freqDist = this.makeFrequencyDistribution(nSamplesPerChannel, sampleRate);
-      signalBufferProcessed = outputTex.toArray();
-      //console.log(signalBufferProcessed);
-
-      for(var i = 0; i < signalBufferProcessed.length; i+=nSamplesPerChannel){
-        orderedMagsList.push(this.orderMagnitudes([...signalBufferProcessed.slice(i,i+nSamplesPerChannel)]));
-      }
-      //Now slice up the big buffer into individual arrays for each signal
-
-      outputTex.delete();
-      return [freqDist,orderedMagsList]; //Returns x (frequencies) and y axis (magnitudes)
-    }
-    else {
-      var tex = outputTex; 
-      outputTex.delete(); 
-      return tex;
-    }
-  }
-
-      
-  //Input buffer of signals [[channel 0],[channel 1],...,[channel n]] with the same number of samples for each signal. Returns arrays of the positive DFT results in the given window.
-  MultiChannelFFT_Bandpass(signalBuffer=[],nSeconds,freqStart,freqEnd, scalar=1, texOut = false) {
-
-    var signalBufferProcessed = [];
-      
-    signalBuffer.forEach((row) => {
-      signalBufferProcessed.push(...row);
-    });
-    //console.log(signalBufferProcessed);
-
-    var freqEnd_nyquist = freqEnd*2;
-    var nSamplesPerChannel = signalBuffer[0].length;
-    var sampleRate = nSamplesPerChannel/nSeconds;
-    
-    this.listfft1D_windowed.setOutput([signalBufferProcessed.length]); //Set output to length of list of signals
-    this.listfft1D_windowed.setLoopMaxIterations(nSamplesPerChannel); //Set loop size to the length of one signal (assuming all are uniform length)
-        
-    var outputTex = this.listfft1D_windowed(signalBufferProcessed,sampleRate,freqStart,freqEnd_nyquist, scalar);
-    if(texOut === true) { return outputTex; }
-    
-    signalBufferProcessed = outputTex.toArray();
-    outputTex.delete();
-
-    //console.log(signalBufferProcessed)
-    //TODO: Optimize for SPEEEEEEED.. or just pass it str8 to a shader
-    var freqDist = this.bandPassWindow(freqStart,freqEnd,sampleRate);
-    return [freqDist, this.orderBPMagnitudes(signalBufferProcessed,nSeconds,sampleRate,nSamplesPerChannel)]; //Returns x (frequencies) and y axis (magnitudes)
-  
-  }
-
-  orderMagnitudes(unorderedMags){
-    return [...unorderedMags.slice(Math.ceil(unorderedMags.length*.5),unorderedMags.length),...unorderedMags.slice(0,Math.ceil(unorderedMags.length*.5))];  
-  }
-
-  makeFrequencyDistribution(FFTlength, sampleRate) {
-    var N = FFTlength; // FFT size
-    var df = sampleRate/N; // frequency resolution
-    
-    var freqDist = [];
-    for(var i=(-N/2); i<(N/2); i++) {
-      var freq = i*df;
-      freqDist.push(freq);
-    }
-    return freqDist;
-  }
-
-  //Order and sum positive magnitudes from bandpass DFT
-  orderBPMagnitudes(signalBufferProcessed,nSeconds,sampleRate,nSamplesPerChannel) {
-    var magList = [];
-
-      for(var i = 0; i < signalBufferProcessed.length; i+=nSamplesPerChannel){
-        magList.push([...signalBufferProcessed.slice(i,Math.ceil(nSamplesPerChannel*.5+i))]);
-      }
-
-
-    var summedMags = [];
-    var _sampleRate = 1/sampleRate;
-    if(nSeconds > 1) { //Need to sum results when sample time > 1 sec
-      magList.forEach((row, k) => {
-        summedMags.push([]);
-        var _max = 1/Math.max(...row); //uhh
-        for(var i = 0; i < row.length; i++ ){
-          if(i == 0){
-              summedMags[k]=row.slice(i,Math.floor(sampleRate));
-              i = Math.floor(sampleRate);
-          }
-          else {
-              var j = i-Math.floor(Math.floor(i*_sampleRate)*sampleRate)-1; //console.log(j);
-              summedMags[k][j] = summedMags[k][j] * row[i-1]*_max; 
-          }
-        }
-        summedMags[k] = [...summedMags[k].slice(0,Math.ceil(summedMags[k].length*0.5))]
-
-      });
-      //console.log(summedMags);
-      return summedMags;  
-    }
-    
-    else {return magList;}
-  }
-
-  //Returns the x axis (frequencies) for the bandpass filter amplitudes. The window gets stretched or squeezed between the chosen frequencies based on the sample rate in my implementation.
-  bandPassWindow(freqStart,freqEnd,nSteps,posOnly=true) {
- 
-    var freqEnd_nyquist = freqEnd*2;
-    let increment = (freqEnd_nyquist - freqStart)/nSteps;
-
-    var fftwindow = [];
-    if(posOnly === true){
-      for (var i = 0; i < Math.ceil(0.5*nSteps); i+=increment){
-          fftwindow.push(freqStart + (freqEnd_nyquist-freqStart)*i/(nSteps));
-      }
-    }
-    else{
-      for (var i = -Math.ceil(0.5*nSteps); i < Math.ceil(0.5*nSteps); i+=increment){
-        fftwindow.push(freqStart + (freqEnd_nyquist-freqStart)*i/(nSteps));
-      }
-    }
-    return fftwindow;
-  }
-}
-
-
-
-
-
-
-
-
-
-
-var mandebrotFrag = 
-(/* unused pure expression or super */ null && (`
-uniform sampler1D tex;
-uniform vec2 center;
-uniform float scale;
-uniform int iter;
-
-void main() {
-    vec2 z, c;
-
-    c.x = 1.3333 * (gl_TexCoord[0].x - 0.5) * scale - center.x;
-    c.y = (gl_TexCoord[0].y - 0.5) * scale - center.y;
-
-    int i;
-    z = c;
-    for(i=0; i<iter; i++) {
-        float x = (z.x * z.x - z.y * z.y) + c.x;
-        float y = (z.y * z.x + z.x * z.y) + c.y;
-
-        if((x * x + y * y) > 4.0) break;
-        z.x = x;
-        z.y = y;
-    }
-
-    gl_FragColor = texture1D(tex, (i == iter ? 0.0 : float(i)) / 100.0);
-}
-`));
-
-var juliaSetFrag =
-(/* unused pure expression or super */ null && (`
-uniform sampler1D tex;
-uniform vec2 c;
-uniform int iter;
-
-void main() {
-    vec2 z;
-    z.x = 3.0 * (gl_TexCoord[0].x - 0.5);
-    z.y = 2.0 * (gl_TexCoord[0].y - 0.5);
-
-    int i;
-    for(i=0; i<iter; i++) {
-        float x = (z.x * z.x - z.y * z.y) + c.x;
-        float y = (z.y * z.x + z.x * z.y) + c.y;
-
-        if((x * x + y * y) > 4.0) break;
-        z.x = x;
-        z.y = y;
-    }
-
-    gl_FragColor = texture1D(tex, (i == iter ? 0.0 : float(i)) / 100.0);
-}
-`));
-
-
-/***/ }),
-
-/***/ 776:
+/***/ 377:
 /***/ ((module) => {
 
 function webpackEmptyAsyncContext(req) {
@@ -24235,7 +24288,7 @@ function webpackEmptyAsyncContext(req) {
 }
 webpackEmptyAsyncContext.keys = () => ([]);
 webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = 776;
+webpackEmptyAsyncContext.id = 377;
 module.exports = webpackEmptyAsyncContext;
 
 /***/ })
@@ -24315,7 +24368,7 @@ self.onmessage = async event => {
     if (input.context !== undefined) {
       //set the context
       manager.ctx = manager.canvas.getContext(input.context);
-      manager.context = manager.ctx;
+      manager.context = manager.ctx; //alt name
     }
 
     let eventSetting = manager.checkEvents(input.foo, input.origin); //console.log(event)
