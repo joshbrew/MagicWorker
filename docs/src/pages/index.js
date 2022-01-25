@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <Layout
       title={`${siteConfig.title}`}
-      description="The API for handling real-time data streams in the browser.">
+      description={`${siteConfig.description}`}>
       <HomepageHeader />
       <main>
         {/* <HomepageFeatures /> */}
