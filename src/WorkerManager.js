@@ -264,22 +264,26 @@ export class WorkerManager {
 
       return new Promise(resolve => {
         //console.log('posting',input,id);
-        if (Array.isArray(input.input)){
-        input.input = input.input.map((v) => {
-          if (typeof v === 'function') return v.toString();
-          else return v;
-        })} 
-
-        const resolver = (res) => 
-          {    
-              if (callback) {
-                  callback(res);
-              }
-              resolve(res);
+          if(typeof input !== 'object') {
+            input = {input};
           }
+          if (Array.isArray(input.input)){
+          input.input = input.input.map((v) => {
+            if (typeof v === 'function') return v.toString();
+            else return v;
+          })} 
 
-        input.callbackId = Math.floor(1000000 * Math.random());
-        this.toResolve[input.callbackId] = resolver;
+          const resolver = (res) => 
+            {    
+                if (callback) {
+                    callback(res);
+                }
+                resolve(res);
+            }
+
+          input.callbackId = Math.floor(1000000 * Math.random());
+          this.toResolve[input.callbackId] = resolver;
+        
 
         if(workerId == null) {
             const worker = this.workers?.[this.threadrot]?.worker

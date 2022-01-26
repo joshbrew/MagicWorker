@@ -1543,7 +1543,11 @@ class CallbackManager {
   ctx;
   context;
 
-  constructor() {
+  constructor(options = {
+    cpu: true,
+    gpu: true,
+    renderer: true
+  }) {
     this.EVENTS = new _utils_Event_js__WEBPACK_IMPORTED_MODULE_0__/* .Events */ .z();
     this.EVENTSETTINGS = [];
     this.ID = Math.floor(Math.random() * 1000); //just a reference for discerning threads 
@@ -1551,7 +1555,7 @@ class CallbackManager {
     //origin = optional tag on input object
     //self = this. scope for variables within the callbackmanager (including values set)
 
-    let defaultFunctions = [{
+    this.defaultFunctions = [{
       //ping pong, just validates responsiveness
       case: 'ping',
       callback: (self, args, origin) => {
@@ -1721,28 +1725,34 @@ class CallbackManager {
       if (o.aliases) o.aliases.forEach(alias => this.callbacks.set(alias, o.callback));
     });
 
-    try {
-      if (_workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__/* .workerCPU */ .h) {
-        this.workerCPU = new _workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__/* .workerCPU */ .h(this);
+    if (options.cpu) {
+      try {
+        if (_workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__/* .workerCPU */ .h) {
+          this.workerCPU = new _workerCPU_workerCPU_js__WEBPACK_IMPORTED_MODULE_2__/* .workerCPU */ .h(this);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
     }
 
-    try {
-      if (_workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__/* .workerGPU */ .a) {
-        this.workerGPU = new _workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__/* .workerGPU */ .a(this);
+    if (options.gpu) {
+      try {
+        if (_workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__/* .workerGPU */ .a) {
+          this.workerGPU = new _workerGPU_workerGPU_js__WEBPACK_IMPORTED_MODULE_3__/* .workerGPU */ .a(this);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
     }
 
-    try {
-      if (_workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__/* .workerRenderer */ .r) {
-        this.workerRenderer = new _workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__/* .workerRenderer */ .r(this);
+    if (options.renderer) {
+      try {
+        if (_workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__/* .workerRenderer */ .r) {
+          this.workerRenderer = new _workerRenderer_workerRenderer__WEBPACK_IMPORTED_MODULE_4__/* .workerRenderer */ .r(this);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
     }
   }
 

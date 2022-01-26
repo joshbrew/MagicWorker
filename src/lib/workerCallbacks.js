@@ -13,7 +13,13 @@ export class CallbackManager {
   ctx;
   context; 
 
-  constructor() {
+  constructor(
+    options={
+      cpu:true,
+      gpu:true,
+      renderer:true
+    }
+  ) {
 
     this.EVENTS = new Events();
     this.EVENTSETTINGS = [];
@@ -26,7 +32,7 @@ export class CallbackManager {
     //origin = optional tag on input object
     //self = this. scope for variables within the callbackmanager (including values set)
 
-    let defaultFunctions = [
+    this.defaultFunctions = [
       { //ping pong, just validates responsiveness
         case: 'ping', callback: (self, args, origin) => {
           return 'pong';
@@ -178,22 +184,30 @@ export class CallbackManager {
     });
 
 
-    try{
-      if(workerCPU) {
-        this.workerCPU = new workerCPU(this);
-      }
-    } catch(err) {console.error(err);}
-    try {
-      if(workerGPU) {
-        this.workerGPU = new workerGPU(this);
-      }
-    } catch(err) {console.error(err);}
-    try{
-      if(workerRenderer) {
-        this.workerRenderer = new workerRenderer(this);
-      }
-    } catch(err) {console.error(err);}
+    if(options.cpu) {
+        try{
+          if(workerCPU) {
+            this.workerCPU = new workerCPU(this);
+          }
+        } catch(err) {console.error(err);}
+    } 
+    
+    if (options.gpu) {
+      try {
+        if(workerGPU) {
+          this.workerGPU = new workerGPU(this);
+        }
+      } catch(err) {console.error(err);}
+    }
 
+    if(options.renderer) {
+      try{
+        if(workerRenderer) {
+          this.workerRenderer = new workerRenderer(this);
+        }
+      } catch(err) {console.error(err);}
+    }
+  
   }
 
   
