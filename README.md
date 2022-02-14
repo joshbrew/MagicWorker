@@ -1,5 +1,9 @@
 ## MagicWorker
 
+![magicworkerv](https://img.shields.io/npm/v/magicworker)
+![magicworkerv](https://img.shields.io/npm/dt/magicworker)
+![magicworkerv](https://img.shields.io/npm/l/magicworker)
+
 `npm i magicworker`
 
 
