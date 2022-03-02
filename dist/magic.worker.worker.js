@@ -1373,7 +1373,7 @@ class Events {
     } else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
       // run this in global scope of window or worker. since window.self = window, we're ok
       //if(port) console.log(port,output);
-      if (port) port.postMessage(output, undefined, transfer);else self.postMessage(output, undefined, transfer); //thread event 
+      if (port) port.postMessage(output, undefined, transfer);else globalThis.postMessage(output, undefined, transfer); //thread event 
     }
 
     this.state.setState({

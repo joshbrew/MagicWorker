@@ -73,7 +73,7 @@
             // run this in global scope of window or worker. since window.self = window, we're ok
             //if(port) console.log(port,output);
             if(port) port.postMessage(output,undefined,transfer);
-            else self.postMessage(output,undefined,transfer); //thread event 
+            else globalThis.postMessage(output,undefined,transfer); //thread event 
         }
         this.state.setState({[eventName]:input}); //local event 
      }

@@ -49,11 +49,35 @@ export class WorkerManager {
       else return this.workers[0].worker;
     }
 
-    addWorker = (url=this.url, type = 'module') => {
+    //can pass text in instead of a url and use type 'blob'
+    addWorker = (
+      url=this.url, // `onmessage(input){ console.log('worker received:', input); }`
+      type = 'module' // 'blob' 'module'
+      ) => {
 
         let newWorker;
         try {
           if (url == null) newWorker = worker()
+          else if (type === 'blob') {
+            try {
+              let id = 'worker'+Math.floor(Math.random()*10000000000);
+              if(!document.getElementById(id)) {
+                document.head.insertAdjacentHTML('beforeend',`
+                    <script id='${id}' type='javascript/worker'>
+                      ${this.url}
+                    </script>
+                  `);
+                }
+                let blob = new Blob([
+                  document.querySelector(id).textContent
+                ], {type:"text/javascript"});
+  
+                newWorker = new Worker(window.URL.createObjectURL(blob));
+                console.log("Blob worker created!");
+              } catch(err3) { 
+                console.error(err3); 
+              }
+          }
           else {
             if (!(url instanceof URL)) url = new URL(url, import.meta.url)
             newWorker = new Worker(url, {name:'worker_'+this.workers.length, type})
@@ -75,8 +99,8 @@ export class WorkerManager {
             //   }
 
             //   let mgr = CallbackManager;
-
-            //   if(!document.getElementById('blobworker')) {
+            //    let id = 'worker'+Math.floor(Math.random()*10000000000);
+            //   if(!document.getElementById(id)) {
             //     document.head.insertAdjacentHTML('beforeend',`
             //       <script id='blobworker' type='javascript/worker'>
             //         //gotta handle imports
@@ -102,7 +126,7 @@ export class WorkerManager {
             //     `);
             //   }
             //   let blob = new Blob([
-            //     document.querySelector('#blobworker').textContent
+            //     document.querySelector(id).textContent
             //   ], {type:"text/javascript"});
 
             //   console.log("Blob worker!");
