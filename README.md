@@ -1,5 +1,9 @@
 ## MagicWorker
 
+![magicworkerv](https://img.shields.io/npm/v/magicworker)
+![magicworkerv](https://img.shields.io/npm/dt/magicworker)
+![magicworkerv](https://img.shields.io/npm/l/magicworker)
+
 `npm i magicworker`
 
 
@@ -155,7 +159,7 @@ function rms(arr, mean, len) { //root mean square error
 magic.run('addgpufunc',[rms.toString()]);
 
 function transpose2DKern(mat2) { //Transpose a 2D matrix, meant to be combined
-    return mat2[gpuutils.thread.y][gpuutils.thread.x];
+    return mat2[this.thread.y][this.thread.x];
 }
 
 magic.run('addkernel',['transpose',transpose2DKern.toString()]
