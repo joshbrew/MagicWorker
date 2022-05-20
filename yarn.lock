@@ -437,10 +437,10 @@
   dependencies:
     "fill-range" "^7.0.1"
 
-"brainsatplay-math@^0.0.2":
-  "integrity" "sha512-7fjUfcmR2TcHtRh9jCds1WF1HZWhvvDytE6ngrkOUnMTQTbrDs0iAcp8NjMEiHumJRjcaD/c6PN60wIY0rjQaQ=="
-  "resolved" "https://registry.npmjs.org/brainsatplay-math/-/brainsatplay-math-0.0.2.tgz"
-  "version" "0.0.2"
+"brainsatplay-math@^0.0.3":
+  "integrity" "sha512-YMxaEgwvg6JIx9V91Pc2hkSKXahEahk7UNY3vXnheVfsmhqkFl8kzuY88E4df7/gOPoHeSANeWFGzezdpH7mdg=="
+  "resolved" "https://registry.npmjs.org/brainsatplay-math/-/brainsatplay-math-0.0.3.tgz"
+  "version" "0.0.3"
 
 "browserslist@^4.14.5", "browserslist@^4.17.5":
   "integrity" "sha512-u2tbbG5PdKRTUoctO3NBD8FQ5HdPh1ZXPHzp1rwaa5jTc+RV9/+RlWiAIKmjRPQF+xbGM9Kklj5bZQFa2s/38A=="
@@ -910,9 +910,9 @@
   "version" "2.1.0"
 
 "minimist@^1.2.0", "minimist@^1.2.5":
-  "integrity" "sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw=="
-  "resolved" "https://registry.npmjs.org/minimist/-/minimist-1.2.5.tgz"
-  "version" "1.2.5"
+  "integrity" "sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q=="
+  "resolved" "https://registry.npmjs.org/minimist/-/minimist-1.2.6.tgz"
+  "version" "1.2.6"
 
 "ms@2.1.2":
   "integrity" "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w=="
@@ -1198,10 +1198,6 @@
   "integrity" "sha512-LbBerg7GaSPjYtTOnu41AMp7tV6efUNR3p4Wk5NzkSsNTBuA5mDGOfwwZL1jhhVMLx9V20HolIUo0+U3AXehbg=="
   "resolved" "https://registry.npmjs.org/three/-/three-0.134.0.tgz"
   "version" "0.134.0"
-
-"tinybuild@file:../../../../AppData/Roaming/npm/node_modules/tinybuild":
-  "resolved" "file:../../../../AppData/Roaming/npm/node_modules/tinybuild"
-  "version" "0.3.18"
 
 "to-fast-properties@^2.0.0":
   "integrity" "sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4="
