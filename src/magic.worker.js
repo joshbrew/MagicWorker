@@ -1,11 +1,6 @@
 
 import {CallbackManager} from './lib/workerCallbacks.js'
 
-
-let manager = new CallbackManager();
-let id = `worker_${Math.floor(Math.random()*10000000000)}`;
-let counter = 0;
-
 self.onmessage = async (event) => {
   let input;
   if(event.data.output) input = event.data.output; //from events
@@ -68,6 +63,15 @@ self.onmessage = async (event) => {
   return dict;
 }
 
-manager.EVENTS.emit('newWorker',id);
 
-export default self
+if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+  console.log('worked!')
+  self.manager = new CallbackManager();
+  self.id = `worker_${Math.floor(Math.random()*10000000000)}`;
+  self.counter = 0;
+  self.manager.EVENTS.emit('newWorker',id);
+}
+
+
+export default self;
+                

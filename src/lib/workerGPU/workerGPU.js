@@ -1,6 +1,6 @@
 import {gpuUtils} from 'gpujsutils'
 import {Math2} from 'brainsatplay-math'
-import { parseFunctionFromText } from '../utils/Parsing';
+import { parseFunctionFromText } from '../utils/Parsing.js';
 
 //GPU.js utilities for the web worker callback manager
 export class workerGPU {

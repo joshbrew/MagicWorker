@@ -1,11 +1,10 @@
 //canvas and threejs rendering utilities on the worker
-import { ProxyManager } from './ProxyListener';
+import { ProxyManager } from './ProxyListener.js';
 
-import { parseFunctionFromText, dynamicImport } from '../utils/Parsing';
+import { parseFunctionFromText, dynamicImport } from '../utils/Parsing.js';
 
 export class workerRenderer {
     constructor(callbackManager) {
-
 
         this.callbackManager = callbackManager;
         callbackManager.canvas = new OffscreenCanvas(512, 512); //can add fnctions and refer to this.offscreen 
@@ -17,7 +16,7 @@ export class workerRenderer {
         callbackManager.PROXYMANAGER = new ProxyManager();
 
         try{
-          if(window) console.log('worker in window!');
+          //if(window) console.log('worker in window!');
         } catch(err) {
           self.document = {}; //threejs hack
         }

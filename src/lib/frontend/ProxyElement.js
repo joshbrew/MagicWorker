@@ -1,7 +1,7 @@
 //from UI thread
 
 /////////////https://threejsfundamentals.org/threejs/lessons/threejs-offscreencanvas.html
-import { WorkerManager } from "../../WorkerManager";
+import { WorkerManager } from "../../WorkerManager.js";
   
 
 function noop() {

@@ -18145,9 +18145,9 @@ ${result2.join("")}}`;
   // magic.worker.js
   var url;
   if (typeof process !== "undefined") {
-    url = path.join(process.cwd(), node_modules, magicworker, magic.worker.js);
+    url = path.join(process.cwd(), "node_modules", "magicworker", "distmagic.worker.js");
   } else
-    url = window.location.origin + "/node_modules/magicworker/magic.worker.js";
+    url = window.location.origin + "/node_modules/magicworker/dist/magic.worker.js";
   var magic_worker_default = url;
 
   // node_modules/objectlisteners/ObjectListener.js
@@ -21822,8 +21822,6 @@ ${result2.join("")}}`;
       callbackManager.threeUtil = void 0;
       callbackManager.PROXYMANAGER = new ProxyManager();
       try {
-        if (window)
-          console.log("worker in window!");
       } catch (err) {
         self.document = {};
       }
@@ -22438,6 +22436,7 @@ ${result2.join("")}}`;
         return await this.EVENTS.addEvent(eventName, origin2, foo, id);
       };
       let i = 0;
+      console.log("worker", magic_worker_default);
       while (i < nThreads) {
         this.addWorker();
         i++;
@@ -22456,19 +22455,12 @@ ${result2.join("")}}`;
       let newWorker;
       try {
         if (url2 == null)
-          newWorker = new Worker(magic_worker_default);
+          newWorker = new Worker(new URL(magic_worker_default));
         else if (type === "blob") {
           try {
             let id = "worker" + Math.floor(Math.random() * 1e10);
-            if (!document.getElementById(id)) {
-              document.head.insertAdjacentHTML("beforeend", `
-                    <script id='${id}' type='javascript/worker'>
-                      ${this.url}
-                    <\/script>
-                  `);
-            }
             let blob = new Blob([
-              document.querySelector(id).textContent
+              this.url
             ], { type: "text/javascript" });
             newWorker = new Worker(URL.createObjectURL(blob));
             console.log("Blob worker created!");

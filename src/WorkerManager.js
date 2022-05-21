@@ -1,8 +1,8 @@
 
 import {CallbackManager} from './lib/workerCallbacks.js' 
 
-//console.log(worker);
 import worker from "./magic.worker.js" //bundled worker
+//console.log(worker);
 
 import { Events } from './lib/utils/Event.js';
 import { ProxyElement, initProxyElement } from './lib/frontend/ProxyElement.js';
@@ -40,6 +40,7 @@ export class WorkerManager {
       this.addEvent = async (eventName, origin, foo, id) => {return await this.EVENTS.addEvent(eventName, origin, foo, id)};
 
       let i = 0;
+      console.log('worker',worker);
 
       while(i < nThreads){
         this.addWorker(); 
@@ -62,19 +63,19 @@ export class WorkerManager {
 
         let newWorker;
         try {
-          if (url == null) newWorker = new Worker(worker); //use the bundled worker
+          if (url == null) newWorker = new Worker(new URL(worker)); //worker();//use the bundled worker
           else if (type === 'blob') {
             try {
               let id = 'worker'+Math.floor(Math.random()*10000000000);
-              if(!document.getElementById(id)) {
-                document.head.insertAdjacentHTML('beforeend',`
-                    <script id='${id}' type='javascript/worker'>
-                      ${this.url}
-                    </script>
-                  `);
-                }
+              //if(!document.getElementById(id)) {
+                // document.head.insertAdjacentHTML('beforeend',`
+                //     <script id='${id}' type='javascript/worker'>
+                //       ${this.url}
+                //     </script>
+                //   `);
+                // }
                 let blob = new Blob([
-                  document.querySelector(id).textContent
+                  this.url
                 ], {type:"text/javascript"});
   
                 newWorker = new Worker(URL.createObjectURL(blob));

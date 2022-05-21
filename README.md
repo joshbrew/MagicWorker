@@ -50,7 +50,7 @@ manager.run('ping',undefined,id); //the id is optional if you want to rotate thr
 let result = await manager.run('ping');
 
 //or
-manager.run('ping').then(res => console.log(result)).catch(console.error);
+manager.run('ping').then(res => console.log(res)).catch(console.error);
 ```
 
 #### Adding a function to the thread
@@ -675,6 +675,8 @@ particleSettings.forEach((s,i) => {
 
 
 ```
+
+TODO: bundle the threejs worker
 
 
 Joshua Brewster and Garrett Flynn

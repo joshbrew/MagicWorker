@@ -1942,23 +1942,23 @@ var require_gpu_browser_min = __commonJS({
                 return this.finishNode(node, "ThisExpression");
               case types.name:
                 var startPos = this.start, startLoc = this.startLoc, containsEsc = this.containsEsc;
-                var id2 = this.parseIdent(false);
-                if (this.options.ecmaVersion >= 8 && !containsEsc && id2.name === "async" && !this.canInsertSemicolon() && this.eat(types._function)) {
+                var id = this.parseIdent(false);
+                if (this.options.ecmaVersion >= 8 && !containsEsc && id.name === "async" && !this.canInsertSemicolon() && this.eat(types._function)) {
                   return this.parseFunction(this.startNodeAt(startPos, startLoc), 0, false, true);
                 }
                 if (canBeArrow && !this.canInsertSemicolon()) {
                   if (this.eat(types.arrow)) {
-                    return this.parseArrowExpression(this.startNodeAt(startPos, startLoc), [id2], false);
+                    return this.parseArrowExpression(this.startNodeAt(startPos, startLoc), [id], false);
                   }
-                  if (this.options.ecmaVersion >= 8 && id2.name === "async" && this.type === types.name && !containsEsc) {
-                    id2 = this.parseIdent(false);
+                  if (this.options.ecmaVersion >= 8 && id.name === "async" && this.type === types.name && !containsEsc) {
+                    id = this.parseIdent(false);
                     if (this.canInsertSemicolon() || !this.eat(types.arrow)) {
                       this.unexpected();
                     }
-                    return this.parseArrowExpression(this.startNodeAt(startPos, startLoc), [id2], true);
+                    return this.parseArrowExpression(this.startNodeAt(startPos, startLoc), [id], true);
                   }
                 }
-                return id2;
+                return id;
               case types.regexp:
                 var value2 = this.value;
                 node = this.parseLiteral(value2.value);
@@ -2600,9 +2600,9 @@ var require_gpu_browser_min = __commonJS({
               this.raiseRecoverable(pos, "Identifier '" + name2 + "' has already been declared");
             }
           };
-          pp$5.checkLocalExport = function(id2) {
-            if (this.scopeStack[0].lexical.indexOf(id2.name) === -1 && this.scopeStack[0].var.indexOf(id2.name) === -1) {
-              this.undefinedExports[id2.name] = id2;
+          pp$5.checkLocalExport = function(id) {
+            if (this.scopeStack[0].lexical.indexOf(id.name) === -1 && this.scopeStack[0].var.indexOf(id.name) === -1) {
+              this.undefinedExports[id.name] = id;
             }
           };
           pp$5.currentScope = function() {
@@ -15894,10 +15894,10 @@ ${updateArr.join("")};`);
         const { WebGLKernelValueMemoryOptimizedNumberTexture } = require2("../../web-gl/kernel-value/memory-optimized-number-texture");
         class WebGL2KernelValueMemoryOptimizedNumberTexture extends WebGLKernelValueMemoryOptimizedNumberTexture {
           getSource() {
-            const { id: id2, sizeId, textureSize, dimensionsId, dimensions } = this;
+            const { id, sizeId, textureSize, dimensionsId, dimensions } = this;
             const variablePrecision = this.getVariablePrecisionString();
             return utils.linesToString([
-              `uniform sampler2D ${id2}`,
+              `uniform sampler2D ${id}`,
               `${variablePrecision} ivec2 ${sizeId} = ivec2(${textureSize[0]}, ${textureSize[1]})`,
               `${variablePrecision} ivec3 ${dimensionsId} = ivec3(${dimensions[0]}, ${dimensions[1]}, ${dimensions[2]})`
             ]);
@@ -15911,10 +15911,10 @@ ${updateArr.join("")};`);
         const { WebGLKernelValueNumberTexture } = require2("../../web-gl/kernel-value/number-texture");
         class WebGL2KernelValueNumberTexture extends WebGLKernelValueNumberTexture {
           getSource() {
-            const { id: id2, sizeId, textureSize, dimensionsId, dimensions } = this;
+            const { id, sizeId, textureSize, dimensionsId, dimensions } = this;
             const variablePrecision = this.getVariablePrecisionString();
             return utils.linesToString([
-              `uniform ${variablePrecision} sampler2D ${id2}`,
+              `uniform ${variablePrecision} sampler2D ${id}`,
               `${variablePrecision} ivec2 ${sizeId} = ivec2(${textureSize[0]}, ${textureSize[1]})`,
               `${variablePrecision} ivec3 ${dimensionsId} = ivec3(${dimensions[0]}, ${dimensions[1]}, ${dimensions[2]})`
             ]);
@@ -18128,6 +18128,14 @@ ${result2.join("")}}`;
   }
 });
 
+// magic.worker.js
+var url;
+if (typeof process !== "undefined") {
+  url = path.join(process.cwd(), "node_modules", "magicworker", "distmagic.worker.js");
+} else
+  url = window.location.origin + "/node_modules/magicworker/dist/magic.worker.js";
+var magic_worker_default = url;
+
 // node_modules/objectlisteners/ObjectListener.js
 var ObjectListener = class {
   constructor(debug = false, synchronous = false) {
@@ -18494,11 +18502,11 @@ if (JSON.stringifyFast === void 0) {
   JSON.stringifyFast = function() {
     const refs = /* @__PURE__ */ new Map();
     const parents = [];
-    const path = ["this"];
+    const path2 = ["this"];
     function clear() {
       refs.clear();
       parents.length = 0;
-      path.length = 1;
+      path2.length = 1;
     }
     function updateParents(key2, value2) {
       var idx = parents.length - 1;
@@ -18506,7 +18514,7 @@ if (JSON.stringifyFast === void 0) {
         var prev = parents[idx];
         if (typeof prev === "object") {
           if (prev[key2] === value2 || idx === 0) {
-            path.push(key2);
+            path2.push(key2);
             parents.push(value2.pushed);
           } else {
             while (idx-- >= 0) {
@@ -18515,10 +18523,10 @@ if (JSON.stringifyFast === void 0) {
                 if (prev[key2] === value2) {
                   idx += 2;
                   parents.length = idx;
-                  path.length = idx;
+                  path2.length = idx;
                   --idx;
                   parents[idx] = value2;
-                  path[idx] = key2;
+                  path2[idx] = key2;
                   break;
                 }
               }
@@ -18540,7 +18548,7 @@ if (JSON.stringifyFast === void 0) {
           if (other) {
             return "[Circular Reference]" + other;
           } else {
-            refs.set(value2, path.join("."));
+            refs.set(value2, path2.join("."));
           }
           if (c === "Array") {
             if (value2.length > 20) {
@@ -18617,17 +18625,17 @@ if (JSON.stringifyWithCircularRefs === void 0) {
   JSON.stringifyWithCircularRefs = function() {
     const refs = /* @__PURE__ */ new Map();
     const parents = [];
-    const path = ["this"];
+    const path2 = ["this"];
     function clear() {
       refs.clear();
       parents.length = 0;
-      path.length = 1;
+      path2.length = 1;
     }
     function updateParents(key2, value2) {
       var idx = parents.length - 1;
       var prev = parents[idx];
       if (prev[key2] === value2 || idx === 0) {
-        path.push(key2);
+        path2.push(key2);
         parents.push(value2);
       } else {
         while (idx-- >= 0) {
@@ -18635,10 +18643,10 @@ if (JSON.stringifyWithCircularRefs === void 0) {
           if (prev[key2] === value2) {
             idx += 2;
             parents.length = idx;
-            path.length = idx;
+            path2.length = idx;
             --idx;
             parents[idx] = value2;
-            path[idx] = key2;
+            path2[idx] = key2;
             break;
           }
         }
@@ -18654,7 +18662,7 @@ if (JSON.stringifyWithCircularRefs === void 0) {
           if (other) {
             return "[Circular Reference]" + other;
           } else {
-            refs.set(value2, path.join("."));
+            refs.set(value2, path2.join("."));
           }
         }
       }
@@ -19002,11 +19010,11 @@ if (JSON.stringifyFast === void 0) {
   JSON.stringifyFast = function() {
     const refs = /* @__PURE__ */ new Map();
     const parents = [];
-    const path = ["this"];
+    const path2 = ["this"];
     function clear() {
       refs.clear();
       parents.length = 0;
-      path.length = 1;
+      path2.length = 1;
     }
     function updateParents(key2, value2) {
       var idx = parents.length - 1;
@@ -19014,7 +19022,7 @@ if (JSON.stringifyFast === void 0) {
         var prev = parents[idx];
         if (typeof prev === "object") {
           if (prev[key2] === value2 || idx === 0) {
-            path.push(key2);
+            path2.push(key2);
             parents.push(value2.pushed);
           } else {
             while (idx-- >= 0) {
@@ -19023,10 +19031,10 @@ if (JSON.stringifyFast === void 0) {
                 if (prev[key2] === value2) {
                   idx += 2;
                   parents.length = idx;
-                  path.length = idx;
+                  path2.length = idx;
                   --idx;
                   parents[idx] = value2;
-                  path[idx] = key2;
+                  path2[idx] = key2;
                   break;
                 }
               }
@@ -19048,7 +19056,7 @@ if (JSON.stringifyFast === void 0) {
           if (other) {
             return "[Circular Reference]" + other;
           } else {
-            refs.set(value2, path.join("."));
+            refs.set(value2, path2.join("."));
           }
           if (c === "Array") {
             if (value2.length > 20) {
@@ -19125,18 +19133,18 @@ if (JSON.stringifyWithCircularRefs === void 0) {
   JSON.stringifyWithCircularRefs = function() {
     const refs = /* @__PURE__ */ new Map();
     const parents = [];
-    const path = ["this"];
+    const path2 = ["this"];
     function clear() {
       refs.clear();
       parents.length = 0;
-      path.length = 1;
+      path2.length = 1;
     }
     function updateParents(key2, value2) {
       var idx = parents.length - 1;
       var prev = parents[idx];
       if (typeof prev === "object") {
         if (prev[key2] === value2 || idx === 0) {
-          path.push(key2);
+          path2.push(key2);
           parents.push(value2.pushed);
         } else {
           while (idx-- >= 0) {
@@ -19145,10 +19153,10 @@ if (JSON.stringifyWithCircularRefs === void 0) {
               if (prev[key2] === value2) {
                 idx += 2;
                 parents.length = idx;
-                path.length = idx;
+                path2.length = idx;
                 --idx;
                 parents[idx] = value2;
-                path[idx] = key2;
+                path2[idx] = key2;
                 break;
               }
             }
@@ -19167,7 +19175,7 @@ if (JSON.stringifyWithCircularRefs === void 0) {
           if (other) {
             return "[Circular Reference]" + other;
           } else {
-            refs.set(value2, path.join("."));
+            refs.set(value2, path2.join("."));
           }
         }
       }
@@ -19186,16 +19194,16 @@ if (JSON.stringifyWithCircularRefs === void 0) {
 
 // lib/utils/Event.js
 var Events = class {
-  constructor(manager2 = void 0) {
+  constructor(manager = void 0) {
     this.state = new StateManager({}, void 0, false);
-    this.manager = manager2;
-    if (manager2 !== void 0) {
-      let found = manager2.responses.find((foo) => {
+    this.manager = manager;
+    if (manager !== void 0) {
+      let found = manager.responses.find((foo) => {
         if (foo.name === "eventmanager")
           return true;
       });
       if (!found) {
-        manager2.addCallback("eventmanager", this.callback);
+        manager.addCallback("eventmanager", this.callback);
       }
     }
   }
@@ -19258,8 +19266,8 @@ var Events = class {
 };
 
 // lib/utils/Parsing.js
-var dynamicImport = async (url) => {
-  let module = await import(url);
+var dynamicImport = async (url2) => {
+  let module = await import(url2);
   return module;
 };
 function getFunctionBody2(methodString) {
@@ -19960,16 +19968,16 @@ var _Math2 = class {
       let incr = array.length / fitCount;
       let lastIdx = array.length - 1;
       let last = 0;
-      let counter2 = 0;
+      let counter = 0;
       for (let i = incr; i < array.length; i += incr) {
         let rounded = Math.round(i);
         if (rounded > lastIdx)
           rounded = lastIdx;
         for (let j = last; j < rounded; j++) {
-          output[counter2] += array[j];
+          output[counter] += array[j];
         }
-        output[counter2] /= (rounded - last) * scalar;
-        counter2++;
+        output[counter] /= (rounded - last) * scalar;
+        counter++;
         last = rounded;
       }
       return output;
@@ -21776,12 +21784,12 @@ var ProxyManager = class {
     this.handleEvent = this.handleEvent.bind(this);
   }
   makeProxy(data) {
-    const { id: id2 } = data;
+    const { id } = data;
     const proxy = new ElementProxyReceiver();
-    this.targets[id2] = proxy;
+    this.targets[id] = proxy;
   }
-  getProxy(id2) {
-    return this.targets[id2];
+  getProxy(id) {
+    return this.targets[id];
   }
   handleEvent(data) {
     this.targets[data.id].handleEvent(data.data);
@@ -21800,8 +21808,6 @@ var workerRenderer = class {
     callbackManager.threeUtil = void 0;
     callbackManager.PROXYMANAGER = new ProxyManager();
     try {
-      if (window)
-        console.log("worker in window!");
     } catch (err) {
       self.document = {};
     }
@@ -22250,67 +22256,15 @@ var CallbackManager = class {
   };
 };
 
-// magic.worker.js
-var manager = new CallbackManager();
-var id = `worker_${Math.floor(Math.random() * 1e10)}`;
-var counter = 0;
-self.onmessage = async (event) => {
-  let input;
-  if (event.data.output)
-    input = event.data.output;
-  else
-    input = event.data;
-  let dict;
-  let output = void 0;
-  if (event.data?.eventName) {
-    manager.EVENTS.callback(event.data);
-  } else if (typeof input === "object") {
-    if (input.canvas !== void 0) {
-      manager.canvas = input.canvas;
-    }
-    if (input.context !== void 0) {
-      manager.ctx = manager.canvas.getContext(input.context);
-      manager.context = manager.ctx;
-    }
-    let eventSetting = manager.checkEvents(input.foo, input.origin);
-    output = await manager.checkCallbacks(event);
-    counter++;
-    let transfer = void 0;
-    if (output) {
-      if (output.__proto__?.__proto__?.constructor.name === "TypedArray") {
-        transfer = [output.buffer];
-      } else if (output.constructor?.name === "Object") {
-        for (const key2 in output) {
-          if (output[key2].__proto__?.__proto__?.constructor.name === "TypedArray") {
-            if (!transfer)
-              transfer = output[key2].buffer;
-            else
-              transfer.push(output[key2].buffer);
-          }
-        }
-      }
-    }
-    dict = { output, foo: input.foo, origin: input.origin, callbackId: input.callbackId, counter };
-    if (eventSetting) {
-      manager.EVENTS.emit(eventSetting.eventName, dict, void 0, transfer, eventSetting.port);
-    } else if (typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope) {
-      self.postMessage(dict, transfer);
-    }
-  }
-  return dict;
-};
-manager.EVENTS.emit("newWorker", id);
-var magic_worker_default = self;
-
 // lib/frontend/ThreadedCanvas.js
 var ThreadedCanvas = class {
-  constructor(manager2, canvas, context = void 0, drawFunction = void 0, setValues2 = void 0, workerId = void 0, origin2 = `canvas_${Math.round(Math.random() * 1e5)}`, transfer = void 0) {
+  constructor(manager, canvas, context = void 0, drawFunction = void 0, setValues2 = void 0, workerId = void 0, origin2 = `canvas_${Math.round(Math.random() * 1e5)}`, transfer = void 0) {
     if (!canvas)
       throw new Error("Input a canvas element or Id");
     this.origin = origin2;
     this.workerId = workerId;
-    this.manager = manager2;
-    if (!manager2)
+    this.manager = manager;
+    if (!manager)
       return false;
     if (typeof canvas === "string")
       canvas = document.getElementById(canvas);
@@ -22405,11 +22359,11 @@ var ThreadedCanvas = class {
       console.log("Result: ", msg);
     }
   };
-  test(id2 = "testcanvas") {
-    let canvas = document.getElementById(id2);
+  test(id = "testcanvas") {
+    let canvas = document.getElementById(id);
     if (!canvas) {
       canvas = document.createElement("canvas");
-      canvas.id = id2;
+      canvas.id = id;
       document.body.insertAdjacentElement("beforeend", canvas);
     }
     this.canvas = canvas;
@@ -22449,8 +22403,8 @@ var WorkerManager = class {
   ProxyElement = ProxyElement;
   initProxyElement = initProxyElement;
   ThreadedCanvas = ThreadedCanvas;
-  constructor(nThreads = 1, url) {
-    this.url = url;
+  constructor(nThreads = 1, url2) {
+    this.url = url2;
     this.responses = [];
     this.workers = [];
     this.threads = nThreads;
@@ -22463,41 +22417,35 @@ var WorkerManager = class {
     this.unsubEvent = (eventName, sub2) => {
       this.EVENTS.unsubEvent(eventName, sub2);
     };
-    this.addEvent = async (eventName, origin2, foo, id2) => {
-      return await this.EVENTS.addEvent(eventName, origin2, foo, id2);
+    this.addEvent = async (eventName, origin2, foo, id) => {
+      return await this.EVENTS.addEvent(eventName, origin2, foo, id);
     };
     let i = 0;
+    console.log("worker", magic_worker_default);
     while (i < nThreads) {
       this.addWorker();
       i++;
     }
   }
-  getWorker(id2) {
-    if (id2)
+  getWorker(id) {
+    if (id)
       return this.workers.find((o) => {
-        if (o.id === id2)
+        if (o.id === id)
           return true;
       }).worker;
     else
       return this.workers[0].worker;
   }
-  addWorker = (url = this.url, type = "module") => {
+  addWorker = (url2 = this.url, type = "module") => {
     let newWorker;
     try {
-      if (url == null)
-        newWorker = new Worker(magic_worker_default);
+      if (url2 == null)
+        newWorker = new Worker(new URL(magic_worker_default));
       else if (type === "blob") {
         try {
-          let id2 = "worker" + Math.floor(Math.random() * 1e10);
-          if (!document.getElementById(id2)) {
-            document.head.insertAdjacentHTML("beforeend", `
-                    <script id='${id2}' type='javascript/worker'>
-                      ${this.url}
-                    <\/script>
-                  `);
-          }
+          let id = "worker" + Math.floor(Math.random() * 1e10);
           let blob = new Blob([
-            document.querySelector(id2).textContent
+            this.url
           ], { type: "text/javascript" });
           newWorker = new Worker(URL.createObjectURL(blob));
           console.log("Blob worker created!");
@@ -22505,9 +22453,9 @@ var WorkerManager = class {
           console.error(err3);
         }
       } else {
-        if (!(url instanceof URL))
-          url = new URL(url, import.meta.url);
-        newWorker = new Worker(url, { name: "worker_" + this.workers.length, type });
+        if (!(url2 instanceof URL))
+          url2 = new URL(url2, import.meta.url);
+        newWorker = new Worker(url2, { name: "worker_" + this.workers.length, type });
       }
     } catch (err) {
       try {
@@ -22518,8 +22466,8 @@ var WorkerManager = class {
       }
     } finally {
       if (newWorker) {
-        let id2 = "worker_" + Math.floor(Math.random() * 1e10);
-        this.workers.push({ worker: newWorker, id: id2 });
+        let id = "worker_" + Math.floor(Math.random() * 1e10);
+        this.workers.push({ worker: newWorker, id });
         newWorker.onmessage = (ev2) => {
           var msg = ev2.data;
           let toResolve = this.toResolve[ev2.data.callbackId];
@@ -22538,7 +22486,7 @@ var WorkerManager = class {
           console.error(e);
         };
         console.log("magic threads: ", this.workers.length);
-        return id2;
+        return id;
       } else
         return;
     }
@@ -22607,9 +22555,9 @@ var WorkerManager = class {
   }
   runWorkerFunction = this.run;
   runFunction = this.run;
-  async setValues(values = {}, id2, origin2, transfer) {
-    if (id2)
-      return await this.run("setValues", values, id2, origin2, transfer);
+  async setValues(values = {}, id, origin2, transfer) {
+    if (id)
+      return await this.run("setValues", values, id, origin2, transfer);
     else {
       this.workers.forEach((w) => {
         this.run("setValues", values, w.id, origin2, transfer);
@@ -22747,12 +22695,12 @@ var DummyWorker = class {
 
 // lib/frontend/ProxyElement.js
 var ProxyElement = class {
-  constructor(element, origin2, workerId, eventHandlers, manager2) {
+  constructor(element, origin2, workerId, eventHandlers, manager) {
     this.id = "proxy" + Math.floor(Math.random() * 1e4);
     this.eventHandlers = eventHandlers;
     this.origin = origin2;
     this.workerId = workerId;
-    this.manager = manager2 instanceof WorkerManager ? manager2 : new WorkerManager();
+    this.manager = manager instanceof WorkerManager ? manager : new WorkerManager();
     const sendEvent = (data) => {
       this.manager.runWorkerFunction("proxyHandler", { type: "event", id: this.id, data }, this.workerId, this.origin);
     };
