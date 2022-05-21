@@ -178,7 +178,7 @@ export class CallbackManager {
 
 
     this.callbacks = new Map();
-    defaultFunctions.forEach((o) => {
+    this.defaultFunctions.forEach((o) => {
       if(o.case) this.callbacks.set(o.case,o.callback);
       if(o.aliases) o.aliases.forEach((alias) => this.callbacks.set(alias,o.callback));
     });

@@ -3,7 +3,7 @@
  * @packageDocumentation
  * @module magic
  */
-export * from '../../magic.worker';
-export * from '../../lib/frontend/ProxyElement';
-export * from '../../WorkerManager';
-export * from '../../lib/frontend/ThreadedCanvas';
+export * from './magic.worker';
+export * from './ProxyElement';
+export * from './WorkerManager';
+export * from './ThreadedCanvas';

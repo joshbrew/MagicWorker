@@ -22,7 +22,7 @@ export class WorkerManager {
     initProxyElement = initProxyElement;
     ThreadedCanvas = ThreadedCanvas; //class reference
 
-    constructor(url, nThreads=1){
+    constructor(nThreads=1,url=worker()){
       this.url = url;
       this.responses = [];
       this.workers = [];

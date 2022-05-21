@@ -1,5 +1,5 @@
 export class WorkerManager {
-    constructor(url: any, nThreads?: number);
+    constructor(nThreads?: number,url: URL);
     url: any;
     responses: any[];
     workers: any[];
