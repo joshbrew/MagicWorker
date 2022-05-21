@@ -1,6 +1,6 @@
 {
     "name": "magicworker",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "A bundle of web worker management utilities for single script pipeline creation. Includes events, messagechannels, automatic typedarray transfer (especially for passing large datasets between workers), and canvas with input proxies, gpujs functions with gpujsutils (lets you write functions to gpu on a worker if you know how to use their api), and even demo threejs integration. This takes a lot of brain hurt out of the threading procedure on the web.",
     "main": "./dist/magicworker.js",
     "module": "./dist/magicworker.esm.js",

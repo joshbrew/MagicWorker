@@ -65,7 +65,7 @@ self.onmessage = async (event) => {
 
 
 if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-  console.log('worked!')
+  //console.log('worked!')
   self.manager = new CallbackManager();
   self.id = `worker_${Math.floor(Math.random()*10000000000)}`;
   self.counter = 0;
