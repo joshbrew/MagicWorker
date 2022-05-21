@@ -13,7 +13,7 @@ const config = {
         bundleNode: false, // bundle a package with platform:node and separate externals
         bundleHTML: false, //can wrap the built outfile (or first file in outdir) automatically and serve it or click and run the file without hosting.
         globalThis: 'magic',
-        minify:true
+        minify:false
     },
     server: false //{ //defaultServer
     //     debug:false, //print debog messages?

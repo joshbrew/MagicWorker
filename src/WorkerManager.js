@@ -1,11 +1,13 @@
 
-import {CallbackManager} from './lib/workerCallbacks' 
+import {CallbackManager} from './lib/workerCallbacks.js' 
 
-import worker from './magic.worker.js' // internal worker
+//console.log(worker);
+import worker from "./magic.worker.js" //bundled worker
 
-import { Events } from './lib/utils/Event';
-import { ProxyElement, initProxyElement } from './lib/frontend/ProxyElement';
-import { ThreadedCanvas } from './lib/frontend/ThreadedCanvas';
+import { Events } from './lib/utils/Event.js';
+import { ProxyElement, initProxyElement } from './lib/frontend/ProxyElement.js';
+import { ThreadedCanvas } from './lib/frontend/ThreadedCanvas.js';
+
 
 export class WorkerManager {
     url;
@@ -22,7 +24,10 @@ export class WorkerManager {
     initProxyElement = initProxyElement;
     ThreadedCanvas = ThreadedCanvas; //class reference
 
-    constructor(nThreads=1,url=worker()){
+    constructor(
+      nThreads=1,
+      url
+    ){
       this.url = url;
       this.responses = [];
       this.workers = [];
@@ -51,13 +56,13 @@ export class WorkerManager {
 
     //can pass text in instead of a url and use type 'blob'
     addWorker = (
-      url=this.url, // `onmessage(input){ console.log('worker received:', input); }`
+      url = this.url, // `onmessage(input){ console.log('worker received:', input); }`
       type = 'module' // 'blob' 'module'
       ) => {
 
         let newWorker;
         try {
-          if (url == null) newWorker = worker()
+          if (url == null) newWorker = new Worker(worker); //use the bundled worker
           else if (type === 'blob') {
             try {
               let id = 'worker'+Math.floor(Math.random()*10000000000);
@@ -72,7 +77,7 @@ export class WorkerManager {
                   document.querySelector(id).textContent
                 ], {type:"text/javascript"});
   
-                newWorker = new Worker(window.URL.createObjectURL(blob));
+                newWorker = new Worker(URL.createObjectURL(blob));
                 console.log("Blob worker created!");
               } catch(err3) { 
                 console.error(err3); 

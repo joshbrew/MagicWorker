@@ -1,6 +1,7 @@
 
 import {CallbackManager} from './lib/workerCallbacks.js'
 
+
 let manager = new CallbackManager();
 let id = `worker_${Math.floor(Math.random()*10000000000)}`;
 let counter = 0;

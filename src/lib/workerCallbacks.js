@@ -5,7 +5,7 @@ import { parseFunctionFromText, dynamicImport } from './utils/Parsing.js';
 //just comment these out if you don't want them
 import { workerCPU } from './workerCPU/workerCPU.js';
 import { workerGPU } from './workerGPU/workerGPU.js';
-import { workerRenderer } from './workerRenderer/workerRenderer'
+import { workerRenderer } from './workerRenderer/workerRenderer.js'
 
 export class CallbackManager {
 
