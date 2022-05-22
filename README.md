@@ -1,8 +1,9 @@
 ## MagicWorker
 
 ![magicworkerv](https://img.shields.io/npm/v/magicworker)
-![magicworkerv](https://img.shields.io/npm/dt/magicworker)
-![magicworkerv](https://img.shields.io/npm/l/magicworker)
+![magicworkerx](https://img.shields.io/npm/dt/magicworker)
+![magicworkerz](https://img.shields.io/npm/l/magicworker)
+![magicworkers](https://img.shields.io/github/size/joshbrew/MagicWorker/dist/magicworker.js)
 
 `npm i magicworker`
 
@@ -24,7 +25,7 @@
 
 On the frontend, you just need to 
 ```js
-import {WorkerManager} from 'magicworker'
+import {WorkerManager} from 'magicworker' //or its under 'magic' in html files when including the dist magicworker.js
 
 const manager = new WorkerManager();
 ```
@@ -129,12 +130,12 @@ FFT:
 let arr = new Array(100).fill(1);
 
 console.time('fft (kernel writing to gpu)');
-magic.run('fft',[arr,1]).then(
+manager.run('fft',[arr,1]).then(
     (res) => {
 
         console.timeEnd('fft (kernel writing to gpu)')    
         console.time('fft (kernel saved on gpu this time)')
-        magic.run('fft',[arr,1]).then(
+        manager.run('fft',[arr,1]).then(
         (res2) => {
             console.timeEnd('fft (kernel saved on gpu this time)');
             console.log('fft',res);
@@ -156,17 +157,17 @@ function rms(arr, mean, len) { //root mean square error
     return Math.sqrt(est/len);
 }
 
-magic.run('addgpufunc',[rms.toString()]);
+manager.run('addgpufunc',[rms.toString()]);
 
 function transpose2DKern(mat2) { //Transpose a 2D matrix, meant to be combined
     return mat2[this.thread.y][this.thread.x];
 }
 
-magic.run('addkernel',['transpose',transpose2DKern.toString()]
+manager.run('addkernel',['transpose',transpose2DKern.toString()]
 
 let mat2 = [[1,2,3,4],[5,6,7,8],[8,9,10,11],[12,13,14,15]];
 
-let result = await magic.run('callkernel',['transpose', [mat2]]);
+let result = await manager.run('callkernel',['transpose', [mat2]]);
 
 ```
 
@@ -178,17 +179,18 @@ let result = await magic.run('callkernel',['transpose', [mat2]]);
 <script src='./dist/magicworker.js' type='module'> 
 
 //ping the worker to that it's working. These are async functions and can be awaited or can use .then() promises to keep threads synchronized
-magic.run('ping').then(console.log).catch(console.error);
+let manager = new magic.WorkerManager(1);
+manager.run('ping').then(console.log).catch(console.error);
 
 //lists available function on the worker
-magic.run('list')
+manager.run('list')
 .then(result => {result.forEach((r) => {document.body.innerHTML+=`${r}<br>`})})
 .catch(console.error);
 
-let threadId = magic.workers[0].id; //get the specific id of the thread
+let threadId = manager.workers[0].id; //get the specific id of the thread
 let origin = 0; //can name the source of the thread call
 
-magic.addFunction( 
+manager.addFunction( 
             'add',
             function add(self,args,origin){return args[0]+args[1];},
             threadId//, //can add functions to a specific thread, or all of them if blank
@@ -196,7 +198,7 @@ magic.addFunction(
 ).then(console.log).catch(console.error);
 
 //creates a subscribable event for specific functions on threads and/or for specific origins of thread calls
-magic.addEvent(
+manager.addEvent(
     'threadresult',
     threadId,
     'add', // set a specific function call to fire an event for
@@ -204,11 +206,11 @@ magic.addEvent(
 ).then(console.log);
 
 //subscribe to events on the frontend
-magic.subEvent('threadresult',(res)=>{
+manager.subEvent('threadresult',(res)=>{
     console.log("add result", res);
 });
 
-magic.run('add',[5,4],threadId); //now call the new function on the thread and get the result in the event or you can await this call or do .then()
+manager.run('add',[5,4],threadId); //now call the new function on the thread and get the result in the event or you can await this call or do .then()
 
 </script>
 
