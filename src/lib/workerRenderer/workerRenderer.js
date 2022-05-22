@@ -2,6 +2,7 @@
 import { ProxyManager } from './ProxyListener.js';
 
 import { parseFunctionFromText, dynamicImport } from '../utils/Parsing.js';
+//import { threeUtil } from './workerThreeUtils.js';
 
 export class workerRenderer {
     constructor(callbackManager) {
@@ -56,6 +57,7 @@ export class workerRenderer {
                   if (!self.threeUtil) {
                     let module = await dynamicImport('./lib/workerRenderer/workerThreeUtils.js');
                     self.threeUtil = new module.threeUtil(self.canvas,self,self.PROXYMANAGER.getProxy(args[0]));
+                    //self.threeUtil = new threeUtil(self.canvas,self,self.PROXYMANAGER.getProxy(args[0]));
                     self.THREE = self.threeUtil.THREE; //add another reference for the hell of it
                   }
                   if (typeof args[1] === 'object') { //first is the setup function
@@ -85,8 +87,9 @@ export class workerRenderer {
                   }
                   if (!self.threeUtil) {
                     let module = await dynamicImport('./lib/workerRenderer/workerThreeUtils.js'); //not sure about right url till we test again
-                    //console.log(module);
                     self.threeUtil = new module.threeUtil(self.canvas,self,self.PROXYMANAGER.getProxy(args[0]));
+                    //self.threeUtil = new threeUtil(self.canvas,self,self.PROXYMANAGER.getProxy(args[0]));//new module.threeUtil(self.canvas,self,self.PROXYMANAGER.getProxy(args[0]));
+                    //console.log(module);
                   }
                   if (self.threeUtil) {
                     self.threeUtil.clear(self, args, origin);
