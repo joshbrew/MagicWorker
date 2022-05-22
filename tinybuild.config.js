@@ -1,7 +1,7 @@
 
 //import {defaultBundler, defaultServer, packager} from 'tinybuild'
 
-let entryPoints = ['index.ts']
+let entryPoints = ['src/index.ts']
 
 const config = {
     bundler: {

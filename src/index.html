@@ -1,11 +1,125 @@
-
 <!DOCTYPE html>
-<html>
-    <head>
-    </head>
-    <body>  
-        <script src="dist/index.js">
-        </script>
-    </body>
-</html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="dist/magicworker.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    ThreadedCanvas test (something's off):
+    <canvas id='c' height='300px' width='300px' style='height:300px; width:300px;'></canvas><br>
+    <hr>
+    List of default functions from worker:<br>
+</body>
+
+<script type="module">
+    console.log(magic);
+    //Should be one thread by default
+    magic.run('ping').then(console.log).catch(console.error);
+
+    
+    let threadId = magic.workers[0].id;
+    let origin = 0;
+
+    //console.log(ThreadedCanvas);
+
+    magic.addFunction( 
+            'add',
+            function add(self,args,origin){return args[0]+args[1];},
+            threadId//, //can add functions to a specific thread, or all of them if blank
+            //origin //optionally identifies source of the call (e.g. between threads or programs)
+    ).then(console.log).catch(console.error);
+
+    magic.addEvent(
+        'threadresult',
+        threadId,
+        'add'
+    ).then(console.log);
+
+    magic.subEvent('threadresult',(res)=>{
+        console.log("add result", res);
+    });
+
+    magic.run('add',[0,1],threadId)//.then(console.log).catch(console.error);
+
+
+    magic.run('list')
+    .then(result => {result.forEach((r) => {document.body.innerHTML+=`${r}<br>`})})
+    .catch(console.error);
+
+    let draw = (self, args, origin) => {
+        let cWidth = self.canvas.width;
+        let cHeight = self.canvas.height;
+           // style the background
+        let gradient = self.ctx.createRadialGradient(cWidth*0.5,cHeight*0.5,2,cWidth*0.5,cHeight*0.5,100*self.angle*self.angle);
+        gradient.addColorStop(0,"purple");
+        gradient.addColorStop(0.25,"dodgerblue");
+        gradient.addColorStop(0.32,"skyblue");
+        gradient.addColorStop(1,self.bgColor ?? 'black');
+        self.ctx.fillStyle = gradient;
+        self.ctx.fillRect(0,0,cWidth,cHeight);
         
+        // draw the circle
+        self.ctx.beginPath();
+
+        self.angle += self.angleChange;
+
+        let radius = cHeight*0.04 + (cHeight*0.46) * Math.abs(Math.cos(self.angle));
+        self.ctx.arc(cWidth*0.5, cHeight*0.5, radius, 0, Math.PI * 2, false);
+        self.ctx.closePath();
+        
+        // color in the circle
+        self.ctx.fillStyle = self.cColor;
+        self.ctx.fill();
+        //console.log(this.ctx, this.cColor, this.bgColor);
+
+        //console.log(self); //see the whole callback manager
+    }
+
+    
+    //quick setup canvas worker with initial settings
+
+    let canvas = document.getElementById('c');
+  
+
+    let anim = new magic.ThreadedCanvas(                                              
+        magic,                      //needs to reference the workermanager
+        canvas,                //canvas element to transfer to offscreencanvas
+        '2d',                  //canvas context setting       
+        draw,                 //pass the custom draw function
+        {angle:0,angleChange:0.001,bgColor:'black',cColor:'red'}, //'this' values, canvas and context/ctx are also available under 'self' for now, these can be mutated like uniforms with the 'setValues' command
+        threadId,           //worker id to use, if undefined it sets up its own worker
+        origin                                       
+    );   
+
+    anim.setValues({angleChange:0.001});
+
+
+
+
+    let arr = new Array(100).fill(1);
+
+    console.time('coherence (kernel writing to gpu)');
+    magic.run('coherence',[[arr,arr],1,1,50]).then(
+        (res) => {
+            
+            console.timeEnd('coherence (kernel writing to gpu)')    
+            console.time('coherence (kernel saved on gpu this time)')
+            magic.run('coherence',[[arr,arr],1,1,50]).then(
+            (res2) => {
+                console.timeEnd('coherence (kernel saved on gpu this time)');
+                console.log('coherence',res);
+            }).catch(console.error);
+        }).catch(console.error);
+
+
+
+
+    anim.startAnimation();
+
+    
+
+</script>
+</html>
