@@ -3,6 +3,7 @@
 
 import worker from "./magic.worker.js" //bundled worker
 //console.log(worker);
+export {worker}
 
 import { Events } from './lib/utils/Event.js';
 import { ProxyElement, initProxyElement } from './lib/frontend/ProxyElement.js';
