@@ -16,7 +16,10 @@ const config = {
         bundleNode: false, // bundle a package with platform:node and separate externals
         bundleHTML: false, //can wrap the built outfile (or first file in outdir) automatically and serve it or click and run the file without hosting.
         globalThis: 'magic',
-        plugins:[streamingImportsPlugin,workerPlugin({blobWorkers:true})],
+        plugins:[
+            streamingImportsPlugin,
+            workerPlugin({blobWorkers:true})
+        ],
         minify:true
     },
     server: false //{ //defaultServer
