@@ -169,7 +169,7 @@ let result = await manager.run('callkernel',['transpose', [mat2]]);
 
 
 
-## Basic usage in an html file, with the webpacked library:
+## Basic usage in an html file, with the browser library:
 ```html
 
 <script src='./dist/magicworker.js' type='module'> 
@@ -268,12 +268,12 @@ canvasWorker.setValues({angleChange:0.001}); //set the rate of change for the ci
 
 
 
-## Advanced ThreeJS usage with several threads doing their own calculations 
+## Advanced ThreeJS usage with several threads doing their own calculations, using the threejs bundled dist (works in browser!!)
 - [Example (takes a few seconds to load ThreeJS)](https://app.brainsatplay.com#Multithreaded)
 
 ```js
 
-import {WorkerManager, ThreadedCanvas, ProxyElement} from 'magicworker'
+import {WorkerManager, ThreadedCanvas, ProxyElement} from 'node_modules/magicworker/dist/magicworker.three'
 import {DynamicParticles} from 'dynamicparticles' //another library for this example
 
 let workers = new WorkerManager();
