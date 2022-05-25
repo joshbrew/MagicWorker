@@ -37,7 +37,7 @@
     "dependencies": {
         "anotherstatemanager": "^1.1.0",
         "gpujsutils": "^1.0.5",
-        "brainsatplay-math":"^0.0.18",
+        "brainsatplay-math":"^0.0.19",
         "three": "^0.140.2"
     },
     "bugs": {
