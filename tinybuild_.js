@@ -1,13 +1,8 @@
+import {packager, streamingImportsPlugin, workerPlugin} from 'tinybuild'
 
-//import {defaultBundler, defaultServer, packager} from 'tinybuild'
-
-
-let entryPoints = ['src/index.ts'];
-
-
-const config = {
+packager({
     bundler: {
-        entryPoints: entryPoints,
+        entryPoints: ['src/index.ts'],
         outfile: 'dist/magicworker',
         bundleBrowser: true, //plain js format
         bundleESM: true, //.esm format
@@ -15,6 +10,10 @@ const config = {
         bundleNode: false, // bundle a package with platform:node and separate externals
         bundleHTML: false, //can wrap the built outfile (or first file in outdir) automatically and serve it or click and run the file without hosting.
         globalThis: 'magic',
+        plugins:[
+            streamingImportsPlugin,
+            workerPlugin({blobWorkers:true})
+        ],
         minify:true
     },
     server: false //{ //defaultServer
@@ -32,6 +31,4 @@ const config = {
     //     certpath:'packager/node_server/ssl/cert.pem',//if using https, this is required. See cert.pfx.md for instructions
     //     keypath:'packager/node_server/ssl/key.pem'//if using https, this is required. See cert.pfx.md for instructions
     // }
-}
-
-export default config;
+})
